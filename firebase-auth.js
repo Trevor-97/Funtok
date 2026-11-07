@@ -12,7 +12,8 @@ import {
   getFirestore,
   doc,
   setDoc,
-  getDoc
+  getDoc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -31,17 +32,16 @@ const db = getFirestore(app);
 // UI Elements
 const modal = document.querySelector("#accountModal");
 const form = document.querySelector("#authForm");
-const displayName = document.querySelector("#displayName");
+const displayNameInput = document.querySelector("#displayName");
 const displayNameLabel = document.querySelector("#displayNameLabel");
-const email = document.querySelector("#authEmail");
-const password = document.querySelector("#authPassword");
+const emailInput = document.querySelector("#authEmail");
+const passwordInput = document.querySelector("#authPassword");
 const submit = document.querySelector("#authSubmit");
 const switchButton = document.querySelector("#authSwitch");
 const feedback = document.querySelector("#authFeedback");
 const title = document.querySelector("#accountTitle");
 const message = document.querySelector("#accountMessage");
 const signedInPanel = document.querySelector("#signedInPanel");
-const signedInEmail = document.querySelector("#signedInEmail");
 const accountButton = document.querySelector("#accountBtn");
 let mode = "signup";
 
@@ -64,18 +64,18 @@ function setMode(nextMode){
   const signingUp = mode === "signup";
   if(title) title.textContent = signingUp ? "Create your FunTok account" : "Welcome back";
   if(message) message.textContent = signingUp ? "Join FunTok with your email address." : "Log in to continue to your FunTok account.";
-  if(displayName) displayName.hidden = !signingUp;
+  if(displayNameInput) displayNameInput.hidden = !signingUp;
   if(displayNameLabel) displayNameLabel.hidden = !signingUp;
   if(submit) submit.textContent = signingUp ? "Create account" : "Log in";
   if(switchButton) switchButton.textContent = signingUp ? "Already have an account? Log in" : "New to FunTok? Create an account";
-  if(password) password.autocomplete = signingUp ? "new-password" : "current-password";
+  if(passwordInput) passwordInput.autocomplete = signingUp ? "new-password" : "current-password";
   if(feedback) feedback.textContent = "";
 }
 
 // Event Listeners for Modal Open/Close
 accountButton?.addEventListener("click", openAccount);
 document.querySelector('[data-nav="profile"]')?.addEventListener("click", openAccount);
-// Close modal when clicking the X button
+
 const closeBtn = document.querySelector('#accountModal .close');
 if (closeBtn) {
   closeBtn.addEventListener("click", (e) => {
@@ -84,36 +84,13 @@ if (closeBtn) {
   });
 }
 
-// Also allow closing when clicking outside the modal box
 window.addEventListener("click", (e) => {
   if (e.target === modal) {
     closeAccount();
   }
 });
+
 switchButton?.addEventListener("click", () => setMode(mode === "signup" ? "login" : "signup"));
-
-document.querySelector("#logoutBtn")?.addEventListener("click", async () => {
-  try { 
-    await signOut(auth); 
-    if(feedback) feedback.textContent = "You have logged out."; 
-  } catch (error) { 
-    if(feedback) feedback.textContent = readableError(error); 
-  }
-});
-
-function readableError(error){
-  const code = error?.code || "";
-  const messages = {
-    "auth/email-already-in-use": "That email already has an account. Try logging in.",
-    "auth/invalid-email": "Please enter a valid email address.",
-    "auth/weak-password": "Choose a stronger password with at least 6 characters.",
-    "auth/invalid-credential": "Email or password is incorrect. Check them and try again.",
-    "auth/network-request-failed": "Network problem. Check your internet connection and try again.",
-    "auth/too-many-requests": "Too many attempts. Please wait a while and try again.",
-    "auth/unauthorized-domain": "This website domain is not authorized in Firebase yet."
-  };
-  return messages[code] || `Something went wrong (${code || "unknown error"}). Please try again.`;
-}
 
 // Form Submission (Sign up / Login)
 form?.addEventListener("submit", async (event) => {
@@ -122,8 +99,8 @@ form?.addEventListener("submit", async (event) => {
   if(submit) submit.disabled = true;
   try {
     if (mode === "signup") {
-      const result = await createUserWithEmailAndPassword(auth, email.value.trim(), password.value);
-      const name = displayName.value.trim();
+      const result = await createUserWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value);
+      const name = displayNameInput.value.trim();
       
       if (name) {
         await updateProfile(result.user, { displayName: name });
@@ -144,7 +121,7 @@ form?.addEventListener("submit", async (event) => {
 
       if(feedback) feedback.textContent = "Your FunTok account has been created!";
     } else {
-      await signInWithEmailAndPassword(auth, email.value.trim(), password.value);
+      await signInWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value);
       if(feedback) feedback.textContent = "You are now logged in!";
     }
     form.reset();
@@ -155,25 +132,91 @@ form?.addEventListener("submit", async (event) => {
   }
 });
 
-// Track Auth State Changes
+function readableError(error){
+  const code = error?.code || "";
+  const messages = {
+    "auth/email-already-in-use": "That email already has an account. Try logging in.",
+    "auth/invalid-email": "Please enter a valid email address.",
+    "auth/weak-password": "Choose a stronger password with at least 6 characters.",
+    "auth/invalid-credential": "Email or password is incorrect. Check them and try again.",
+    "auth/network-request-failed": "Network problem. Check your internet connection and try again.",
+    "auth/too-many-requests": "Too many attempts. Please wait a while and try again.",
+    "auth/unauthorized-domain": "This website domain is not authorized in Firebase yet."
+  };
+  return messages[code] || `Something went wrong (${code || "unknown error"}). Please try again.`;
+}
+
+// Track Auth State Changes & Build Profile Edit View
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     if(accountButton) accountButton.textContent = "My account";
-    if(signedInPanel) signedInPanel.hidden = false;
     if(form) form.hidden = true;
     if(switchButton) switchButton.hidden = true;
-    if(signedInEmail) signedInEmail.textContent = user.displayName ? `${user.displayName} · ${user.email}` : user.email;
-    if(title) title.textContent = "Your FunTok account";
-    if(message) message.textContent = "You are signed in.";
+    if(title) title.textContent = "Your FunTok Profile";
+    if(message) message.textContent = "Manage your bio and account details.";
 
-    try {
-      const docRef = doc(db, "users", user.uid);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        console.log("User profile loaded from Firestore:", docSnap.data());
+    if(signedInPanel) {
+      signedInPanel.hidden = false;
+      
+      // Fetch user profile data from Firestore
+      let userBio = "Hello! I am new on FunTok.";
+      let userDisplayName = user.displayName || "";
+      try {
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          userBio = data.bio || userBio;
+          userDisplayName = data.displayName || userDisplayName;
+        }
+      } catch (e) {
+        console.log("Error loading profile:", e);
       }
-    } catch (e) {
-      console.log("Could not load profile document yet:", e);
+
+      // Populate signedInPanel with Profile editing fields
+      signedInPanel.innerHTML = `
+        <p class="signed-in-email"><b>Email:</b> ${user.email}</p>
+        <div class="profile-edit-form" style="margin-top: 15px; text-align: left;">
+          <label style="display:block; font-size: 14px; margin-bottom: 5px;">Display Name</label>
+          <input id="editDisplayName" type="text" value="${userDisplayName}" style="width:100%; padding:10px; margin-bottom:12px; background:#222; color:#fff; border:1px solid #444; border-radius:6px;">
+          
+          <label style="display:block; font-size: 14px; margin-bottom: 5px;">Bio</label>
+          <textarea id="editBio" rows="3" style="width:100%; padding:10px; margin-bottom:15px; background:#222; color:#fff; border:1px solid #444; border-radius:6px;">${userBio}</textarea>
+          
+          <button id="saveProfileBtn" class="primary-btn" type="button" style="width:100%; margin-bottom: 10px;">Save Profile</button>
+          <button id="logoutBtn" class="primary-btn" type="button" style="width:100%; background: #333; color: #fff;">Log out</button>
+          <p id="profileFeedback" style="margin-top: 8px; font-size: 13px; text-align: center; color: #4ade80;"></p>
+        </div>
+      `;
+
+      // Save Profile Button Logic
+      document.querySelector("#saveProfileBtn")?.addEventListener("click", async () => {
+        const newName = document.querySelector("#editDisplayName").value.trim();
+        const newBio = document.querySelector("#editBio").value.trim();
+        const feedbackEl = document.querySelector("#profileFeedback");
+        
+        feedbackEl.textContent = "Saving...";
+        try {
+          await updateDoc(doc(db, "users", user.uid), {
+            displayName: newName,
+            bio: newBio
+          });
+          feedbackEl.textContent = "Profile updated successfully!";
+        } catch (err) {
+          console.error("Error updating profile:", err);
+          feedbackEl.style.color = "#ef4444";
+          feedbackEl.textContent = "Failed to update profile.";
+        }
+      });
+
+      // Logout Button Logic
+      document.querySelector("#logoutBtn")?.addEventListener("click", async () => {
+        try { 
+          await signOut(auth); 
+        } catch (error) { 
+          console.error("Logout error:", error);
+        }
+      });
     }
   } else {
     if(accountButton) accountButton.textContent = "Log in";
