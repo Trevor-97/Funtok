@@ -225,5 +225,60 @@ onAuthStateChanged(auth, async (user) => {
     setMode("signup");
   }
 });
+// --- Video Upload & Feed Local Preview ---
+const uploadBtn = document.querySelector("#uploadBtn");
+const videoInput = document.querySelector("#videoInput");
+const feed = document.querySelector("#feed");
 
+// When the plus upload button is clicked, open file selector
+uploadBtn?.addEventListener("click", () => {
+  // Optional: Check if user is logged in first
+  if (!auth.currentUser) {
+    window.dispatchEvent(new CustomEvent("funtok:open-account"));
+    return;
+  }
+  videoInput?.click();
+});
+
+// When a video file is chosen from the computer
+videoInput?.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  // Create a local object URL for the video file
+  const videoUrl = URL.createObjectURL(file);
+  const currentUser = auth.currentUser;
+  const displayName = currentUser?.displayName || currentUser?.email?.split('@')[0] || "FunTok Creator";
+  const avatarLetter = displayName.charAt(0).toUpperCase();
+
+  // Create a new video card element for the feed
+  const newCard = document.createElement("article");
+  newCard.className = "video-card theme-one";
+  newCard.innerHTML = `
+    <div class="visual" style="background: #000; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+      <video src="${videoUrl}" controls autoplay loop style="width:100%; height:100%; object-fit:cover;"></video>
+    </div>
+    <div class="video-shade"></div>
+    <div class="video-info">
+      <div class="creator"><span class="avatar">${avatarLetter}</span><b>@${displayName.toLowerCase().replace(/\s+/g, '')}</b><button class="follow">Follow</button></div>
+      <p>My new FunTok video! 🎬 #FunTok</p>
+      <span class="sound">♫ original sound — ${displayName.toLowerCase()}</span>
+    </div>
+    <div class="actions">
+      <button class="action like" aria-label="Like">♡<small>1</small></button>
+      <button class="action comments" aria-label="Comments">▢<small>0</small></button>
+      <button class="action share" aria-label="Share">➤<small>Share</small></button>
+      <span class="record">♫</span>
+    </div>
+  `;
+
+  // Insert the new video at the very top of the feed
+  feed?.prepend(newCard);
+  
+  // Reset input so the same file can be uploaded again if needed
+  videoInput.value = "";
+  
+  // Show a toast or feedback if you'd like
+  console.log("Video uploaded and added to local feed!");
+});
 window.addEventListener("funtok:open-account", openAccount);
