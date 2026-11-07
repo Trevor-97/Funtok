@@ -75,7 +75,7 @@ function setMode(nextMode){
 // Event Listeners for Modal Open/Close
 accountButton?.addEventListener("click", openAccount);
 document.querySelector('[data-nav="profile"]')?.addEventListener("click", openAccount);
-document.querySelector('.modal .close')?.addEventListener("click", closeAccount);
+document.querySelector('#accountModal .close')?.addEventListener("click", closeAccount);
 switchButton?.addEventListener("click", () => setMode(mode === "signup" ? "login" : "signup"));
 
 document.querySelector("#logoutBtn")?.addEventListener("click", async () => {
