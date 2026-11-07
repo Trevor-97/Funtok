@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#09090d">
+  <title>FunTok — short videos, big fun</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="FunTok home"><span class="brand-mark">F</span><span>Fun<span class="accent">Tok</span></span></a>
+    <div class="feed-tabs"><button class="tab active" data-feed="for-you">For You</button><button class="tab" data-feed="following">Following</button></div>
+    <button class="icon-btn" id="searchBtn" aria-label="Search">⌕</button>
+  </header>
+
+  <main id="feed" class="feed" aria-label="Video feed">
+    <article class="video-card theme-one">
+      <div class="visual visual-one"><span class="visual-kicker">YOUR NEXT<br>FAVOURITE</span><span class="visual-big">MOMENT</span><span class="visual-small">Make it count ✨</span></div>
+      <div class="video-shade"></div>
+      <div class="video-info"><div class="creator"><span class="avatar">J</span><b>@joy.creates</b><button class="follow">Follow</button></div><p>Little moments make the best memories. ✨ #FunTok #GoodVibes</p><span class="sound">♫ original sound — joy.creates</span></div>
+      <div class="actions"><button class="action like" aria-label="Like">♡<small>1.2K</small></button><button class="action comments" aria-label="Comments">▢<small>84</small></button><button class="action share" aria-label="Share">➤<small>Share</small></button><span class="record">♫</span></div>
+    </article>
+    <article class="video-card theme-two">
+      <div class="visual visual-two"><span class="visual-kicker">CREATE<br>SOMETHING</span><span class="visual-big">NEW</span><span class="visual-small">Your story. Your style. 🎬</span></div>
+      <div class="video-shade"></div>
+      <div class="video-info"><div class="creator"><span class="avatar purple">K</span><b>@kevin.daily</b><button class="follow">Follow</button></div><p>Trying something different today. What do you think? #CreativeLife</p><span class="sound">♫ sunny day — FunTok sounds</span></div>
+      <div class="actions"><button class="action like" aria-label="Like">♡<small>958</small></button><button class="action comments" aria-label="Comments">▢<small>42</small></button><button class="action share" aria-label="Share">➤<small>Share</small></button><span class="record">♫</span></div>
+    </article>
+    <article class="video-card theme-three">
+      <div class="visual visual-three"><span class="visual-kicker">GOOD ENERGY</span><span class="visual-big">ONLY</span><span class="visual-small">Pass the positive vibes 🌍</span></div>
+      <div class="video-shade"></div>
+      <div class="video-info"><div class="creator"><span class="avatar orange">A</span><b>@amanda.vibes</b><button class="follow">Follow</button></div><p>Sending positive energy your way! 💫 #GoodEnergy</p><span class="sound">♫ feel good — amanda.vibes</span></div>
+      <div class="actions"><button class="action like" aria-label="Like">♡<small>2.4K</small></button><button class="action comments" aria-label="Comments">▢<small>109</small></button><button class="action share" aria-label="Share">➤<small>Share</small></button><span class="record">♫</span></div>
+    </article>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Main navigation">
+    <button class="nav-item selected" data-nav="home"><span>⌂</span><small>Home</small></button>
+    <button class="nav-item" data-nav="discover"><span>⌕</span><small>Discover</small></button>
+    <button class="upload-nav" id="uploadBtn" aria-label="Upload video">＋</button>
+    <button class="nav-item" data-nav="inbox"><span>♡</span><small>Inbox</small></button>
+    <button class="nav-item" data-nav="profile"><span>◉</span><small>Profile</small></button>
+  </nav>
+
+  <input id="videoInput" type="file" accept="video/*" hidden>
+  <section class="modal" id="commentsModal" aria-hidden="true">
+    <div class="modal-panel"><div class="modal-head"><b>Comments</b><button class="close">✕</button></div><div id="commentList" class="comment-list"><p class="muted">Be the first to comment.</p></div><form id="commentForm"><input id="commentInput" placeholder="Add a comment…" maxlength="240" required><button>Post</button></form></div>
+  </section>
+  <section class="modal" id="searchModal" aria-hidden="true">
+    <div class="modal-panel search-panel"><div class="modal-head"><b>Discover FunTok</b><button class="close">✕</button></div><input id="searchInput" placeholder="Search creators or hashtags…"><p class="muted">Try #FunTok, #GoodVibes or a creator name.</p></div>
+  </section>
+  <div id="toast" role="status" class="toast"></div>
+  <script src="app.js"></script>
+</body>
+</html>
