@@ -1,4 +1,4 @@
-// Firebase Authentication and Firestore for FunTok. This web configuration is intended for client-side use.
+// Firebase Authentication and Firestore for FunTok
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
 import {
   getAuth,
@@ -28,6 +28,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// UI Elements
 const modal = document.querySelector("#accountModal");
 const form = document.querySelector("#authForm");
 const displayName = document.querySelector("#displayName");
@@ -44,27 +45,46 @@ const signedInEmail = document.querySelector("#signedInEmail");
 const accountButton = document.querySelector("#accountBtn");
 let mode = "signup";
 
-function openAccount(){ modal.classList.add("open"); modal.setAttribute("aria-hidden","false"); }
+function openAccount(){ 
+  if(modal) {
+    modal.classList.add("open"); 
+    modal.setAttribute("aria-hidden","false"); 
+  }
+}
+
+function closeAccount(){ 
+  if(modal) {
+    modal.classList.remove("open"); 
+    modal.setAttribute("aria-hidden","true"); 
+  }
+}
+
 function setMode(nextMode){
   mode = nextMode;
   const signingUp = mode === "signup";
-  title.textContent = signingUp ? "Create your FunTok account" : "Welcome back";
-  message.textContent = signingUp ? "Join FunTok with your email address." : "Log in to continue to your FunTok account.";
-  displayName.hidden = !signingUp;
-  displayNameLabel.hidden = !signingUp;
-  submit.textContent = signingUp ? "Create account" : "Log in";
-  switchButton.textContent = signingUp ? "Already have an account? Log in" : "New to FunTok? Create an account";
-  password.autocomplete = signingUp ? "new-password" : "current-password";
-  feedback.textContent = "";
+  if(title) title.textContent = signingUp ? "Create your FunTok account" : "Welcome back";
+  if(message) message.textContent = signingUp ? "Join FunTok with your email address." : "Log in to continue to your FunTok account.";
+  if(displayName) displayName.hidden = !signingUp;
+  if(displayNameLabel) displayNameLabel.hidden = !signingUp;
+  if(submit) submit.textContent = signingUp ? "Create account" : "Log in";
+  if(switchButton) switchButton.textContent = signingUp ? "Already have an account? Log in" : "New to FunTok? Create an account";
+  if(password) password.autocomplete = signingUp ? "new-password" : "current-password";
+  if(feedback) feedback.textContent = "";
 }
 
+// Event Listeners for Modal Open/Close
 accountButton?.addEventListener("click", openAccount);
 document.querySelector('[data-nav="profile"]')?.addEventListener("click", openAccount);
+document.querySelector('.modal .close')?.addEventListener("click", closeAccount);
 switchButton?.addEventListener("click", () => setMode(mode === "signup" ? "login" : "signup"));
 
 document.querySelector("#logoutBtn")?.addEventListener("click", async () => {
-  try { await signOut(auth); feedback.textContent = "You have logged out."; }
-  catch (error) { feedback.textContent = readableError(error); }
+  try { 
+    await signOut(auth); 
+    if(feedback) feedback.textContent = "You have logged out."; 
+  } catch (error) { 
+    if(feedback) feedback.textContent = readableError(error); 
+  }
 });
 
 function readableError(error){
@@ -76,15 +96,16 @@ function readableError(error){
     "auth/invalid-credential": "Email or password is incorrect. Check them and try again.",
     "auth/network-request-failed": "Network problem. Check your internet connection and try again.",
     "auth/too-many-requests": "Too many attempts. Please wait a while and try again.",
-    "auth/unauthorized-domain": "This website domain is not authorized in Firebase yet. We need to add trevor-97.github.io in Firebase Authentication settings."
+    "auth/unauthorized-domain": "This website domain is not authorized in Firebase yet."
   };
   return messages[code] || `Something went wrong (${code || "unknown error"}). Please try again.`;
 }
 
+// Form Submission (Sign up / Login)
 form?.addEventListener("submit", async (event) => {
   event.preventDefault();
-  feedback.textContent = "Working…";
-  submit.disabled = true;
+  if(feedback) feedback.textContent = "Working…";
+  if(submit) submit.disabled = true;
   try {
     if (mode === "signup") {
       const result = await createUserWithEmailAndPassword(auth, email.value.trim(), password.value);
@@ -107,30 +128,30 @@ form?.addEventListener("submit", async (event) => {
         createdAt: new Date().toISOString()
       });
 
-      feedback.textContent = "Your FunTok account has been created!";
+      if(feedback) feedback.textContent = "Your FunTok account has been created!";
     } else {
       await signInWithEmailAndPassword(auth, email.value.trim(), password.value);
-      feedback.textContent = "You are now logged in!";
+      if(feedback) feedback.textContent = "You are now logged in!";
     }
     form.reset();
   } catch (error) {
-    feedback.textContent = readableError(error);
+    if(feedback) feedback.textContent = readableError(error);
   } finally {
-    submit.disabled = false;
+    if(submit) submit.disabled = false;
   }
 });
 
+// Track Auth State Changes
 onAuthStateChanged(auth, async (user) => {
   if (user) {
-    accountButton.textContent = "My account";
-    signedInPanel.hidden = false;
-    form.hidden = true;
-    switchButton.hidden = true;
-    signedInEmail.textContent = user.displayName ? `${user.displayName} · ${user.email}` : user.email;
-    title.textContent = "Your FunTok account";
-    message.textContent = "You are signed in.";
+    if(accountButton) accountButton.textContent = "My account";
+    if(signedInPanel) signedInPanel.hidden = false;
+    if(form) form.hidden = true;
+    if(switchButton) switchButton.hidden = true;
+    if(signedInEmail) signedInEmail.textContent = user.displayName ? `${user.displayName} · ${user.email}` : user.email;
+    if(title) title.textContent = "Your FunTok account";
+    if(message) message.textContent = "You are signed in.";
 
-    // Optional: Fetch and verify profile data from Firestore
     try {
       const docRef = doc(db, "users", user.uid);
       const docSnap = await getDoc(docRef);
@@ -141,13 +162,12 @@ onAuthStateChanged(auth, async (user) => {
       console.log("Could not load profile document yet:", e);
     }
   } else {
-    accountButton.textContent = "Log in";
-    signedInPanel.hidden = true;
-    form.hidden = false;
-    switchButton.hidden = false;
+    if(accountButton) accountButton.textContent = "Log in";
+    if(signedInPanel) signedInPanel.hidden = true;
+    if(form) form.hidden = false;
+    if(switchButton) switchButton.hidden = false;
     setMode("signup");
   }
 });
 
-// The main app's profile button and the header account button both open the same account panel.
 window.addEventListener("funtok:open-account", openAccount);
