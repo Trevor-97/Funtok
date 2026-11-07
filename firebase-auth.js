@@ -254,25 +254,34 @@ videoInput?.addEventListener("change", (e) => {
 // Create a new video card element for the feed
   const newCard = document.createElement("article");
   newCard.className = "video-card theme-one";
-  // Added z-index and explicit display rules so it appears on top
-  newCard.style.cssText = "position: relative; z-index: 10; margin-bottom: 20px; background: #000; height: 100vh;";
+  // Match the exact CSS styling structure of the existing feed items
+  newCard.style.cssText = "position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; background: #000;";
   newCard.innerHTML = `
     <div class="visual" style="width:100%; height:100%; background: #000; display:flex; align-items:center; justify-content:center; overflow:hidden;">
       <video src="${videoUrl}" controls autoplay loop style="width:100%; height:100%; object-fit:cover;"></video>
     </div>
     <div class="video-shade"></div>
-    <div class="video-info" style="z-index: 15;">
+    <div class="video-info" style="z-index: 110;">
       <div class="creator"><span class="avatar">${avatarLetter}</span><b>@${displayName.toLowerCase().replace(/\s+/g, '')}</b><button class="follow">Follow</button></div>
       <p>My new FunTok video! 🎬 #FunTok</p>
       <span class="sound">♫ original sound — ${displayName.toLowerCase()}</span>
     </div>
-    <div class="actions" style="z-index: 15;">
+    <div class="actions" style="z-index: 110;">
       <button class="action like" aria-label="Like">♡<small>1</small></button>
       <button class="action comments" aria-label="Comments">▢<small>0</small></button>
       <button class="action share" aria-label="Share">➤<small>Share</small></button>
       <span class="record">♫</span>
     </div>
   `;
+
+  // Prepend directly into the feed container so it covers the current view
+  if (feed) {
+    feed.style.position = "relative";
+    feed.prepend(newCard);
+  }
+  
+  videoInput.value = "";
+  console.log("Video overlaid on active feed!");
   // Insert the new video at the very top of the feed
   feed?.prepend(newCard);
   
