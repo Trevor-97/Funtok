@@ -12,8 +12,7 @@ import {
   getFirestore,
   doc,
   setDoc,
-  getDoc,
-  updateDoc
+  getDoc
 } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -87,16 +86,6 @@ document.addEventListener("click", (e) => {
 
 switchButton?.addEventListener("click", () => setMode(mode === "signup" ? "login" : "signup"));
 
-// Logout Action
-document.querySelector("#logoutBtn")?.addEventListener("click", async () => {
-  try { 
-    await signOut(auth); 
-    if(feedback) feedback.textContent = "You have logged out."; 
-  } catch (error) { 
-    if(feedback) feedback.textContent = readableError(error); 
-  }
-});
-
 function readableError(error){
   const code = error?.code || "";
   const messages = {
@@ -150,25 +139,83 @@ form?.addEventListener("submit", async (event) => {
   }
 });
 
-// Authentication State & Profile Loader
+// Authentication State & Profile Management Loader
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     if(accountButton) accountButton.textContent = "My account";
-    if(signedInPanel) signedInPanel.hidden = false;
     if(form) form.hidden = true;
     if(switchButton) switchButton.hidden = true;
-    if(signedInEmail) signedInEmail.textContent = user.displayName ? `${user.displayName} · ${user.email}` : user.email;
-    if(title) title.textContent = "Your FunTok account";
-    if(message) message.textContent = "You are signed in.";
+    if(title) title.textContent = "Your FunTok Profile";
+    if(message) message.textContent = "Manage your bio and account details.";
 
-    try {
-      const userRef = doc(db, "users", user.uid);
-      const docSnap = await getDoc(userRef);
-      if (docSnap.exists()) {
-        console.log("Firestore profile loaded:", docSnap.data());
+    if (signedInPanel) {
+      signedInPanel.hidden = false;
+
+      // Fetch existing user profile data from Firestore
+      let userBio = "Hello! I am new on FunTok.";
+      let userDisplayName = user.displayName || "";
+      try {
+        const userRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(userRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          userBio = data.bio || userBio;
+          userDisplayName = data.displayName || userDisplayName;
+        }
+      } catch (e) {
+        console.warn("Could not fetch user profile details:", e);
       }
-    } catch (e) {
-      console.warn("Could not fetch user profile details:", e);
+
+      // Populate signedInPanel with editable Profile fields
+      signedInPanel.innerHTML = `
+        <p class="signed-in-email" style="margin-bottom: 12px;"><b>Email:</b> ${user.email}</p>
+        <div class="profile-edit-form" style="text-align: left;">
+          <label style="display:block; font-size: 14px; margin-bottom: 5px; color: #ccc;">Display Name</label>
+          <input id="editDisplayName" type="text" value="${userDisplayName}" style="width:100%; padding:10px; margin-bottom:12px; background:#222; color:#fff; border:1px solid #444; border-radius:6px;">
+          
+          <label style="display:block; font-size: 14px; margin-bottom: 5px; color: #ccc;">Bio</label>
+          <textarea id="editBio" rows="3" style="width:100%; padding:10px; margin-bottom:15px; background:#222; color:#fff; border:1px solid #444; border-radius:6px;">${userBio}</textarea>
+          
+          <button id="saveProfileBtn" class="primary-btn" type="button" style="width:100%; margin-bottom: 10px;">Save Profile</button>
+          <button id="logoutBtn" class="primary-btn" type="button" style="width:100%; background: #333; color: #fff;">Log out</button>
+          <p id="profileFeedback" style="margin-top: 8px; font-size: 13px; text-align: center; color: #4ade80;"></p>
+        </div>
+      `;
+
+      // Save Profile Button Event Listener
+      document.querySelector("#saveProfileBtn")?.addEventListener("click", async () => {
+        const newName = document.querySelector("#editDisplayName").value.trim();
+        const newBio = document.querySelector("#editBio").value.trim();
+        const feedbackEl = document.querySelector("#profileFeedback");
+        
+        feedbackEl.style.color = "#4ade80";
+        feedbackEl.textContent = "Saving...";
+        try {
+          await setDoc(doc(db, "users", user.uid), {
+            displayName: newName,
+            bio: newBio
+          }, { merge: true });
+
+          if (newName) {
+            await updateProfile(user, { displayName: newName });
+          }
+
+          feedbackEl.textContent = "Profile updated successfully!";
+        } catch (err) {
+          console.error("Error updating profile:", err);
+          feedbackEl.style.color = "#ef4444";
+          feedbackEl.textContent = "Failed to update profile.";
+        }
+      });
+
+      // Logout Button Event Listener
+      document.querySelector("#logoutBtn")?.addEventListener("click", async () => {
+        try { 
+          await signOut(auth); 
+        } catch (error) { 
+          console.error("Logout error:", error);
+        }
+      });
     }
   } else {
     if(accountButton) accountButton.textContent = "Log in";
