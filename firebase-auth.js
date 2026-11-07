@@ -75,7 +75,21 @@ function setMode(nextMode){
 // Event Listeners for Modal Open/Close
 accountButton?.addEventListener("click", openAccount);
 document.querySelector('[data-nav="profile"]')?.addEventListener("click", openAccount);
-document.querySelector('#accountModal .close')?.addEventListener("click", closeAccount);
+// Close modal when clicking the X button
+const closeBtn = document.querySelector('#accountModal .close');
+if (closeBtn) {
+  closeBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    closeAccount();
+  });
+}
+
+// Also allow closing when clicking outside the modal box
+window.addEventListener("click", (e) => {
+  if (e.target === modal) {
+    closeAccount();
+  }
+});
 switchButton?.addEventListener("click", () => setMode(mode === "signup" ? "login" : "signup"));
 
 document.querySelector("#logoutBtn")?.addEventListener("click", async () => {
