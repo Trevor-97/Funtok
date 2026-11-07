@@ -26,3 +26,12 @@ PUBLISHING WITH GITHUB PAGES
 
 NEXT DEVELOPMENT STEP
 Connect a backend such as Supabase for user accounts, profiles, cloud video storage, and shared likes/comments. Add reporting, moderation, age-appropriate safety controls, and upload limits before opening it to the public.
+
+
+FIREBASE AUTHENTICATION UPDATE
+- Firebase email/password authentication is connected in firebase-auth.js.
+- The web app configuration is public client configuration, not a service-account private key.
+- In Firebase Console, ensure Authentication > Sign-in method > Email/Password is enabled.
+- Before testing on GitHub Pages, add trevor-97.github.io under Authentication > Settings > Authorized domains if it is not already listed.
+- Commit all updated files to the main branch.
+- This update adds sign-up and login only. User-generated videos are still local previews; cloud video uploads and profiles database are future steps.

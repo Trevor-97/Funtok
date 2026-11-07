@@ -12,7 +12,7 @@
   <header class="topbar">
     <a class="brand" href="#" aria-label="FunTok home"><span class="brand-mark">F</span><span>Fun<span class="accent">Tok</span></span></a>
     <div class="feed-tabs"><button class="tab active" data-feed="for-you">For You</button><button class="tab" data-feed="following">Following</button></div>
-    <button class="icon-btn" id="searchBtn" aria-label="Search">⌕</button>
+    <div class="top-actions"><button class="icon-btn" id="searchBtn" aria-label="Search">⌕</button><button class="account-btn" id="accountBtn" aria-label="Account">Log in</button></div>
   </header>
 
   <main id="feed" class="feed" aria-label="Video feed">
@@ -51,7 +51,29 @@
   <section class="modal" id="searchModal" aria-hidden="true">
     <div class="modal-panel search-panel"><div class="modal-head"><b>Discover FunTok</b><button class="close">✕</button></div><input id="searchInput" placeholder="Search creators or hashtags…"><p class="muted">Try #FunTok, #GoodVibes or a creator name.</p></div>
   </section>
+  <section class="modal" id="accountModal" aria-hidden="true">
+    <div class="modal-panel account-panel">
+      <div class="modal-head"><b id="accountTitle">Welcome to FunTok</b><button class="close">✕</button></div>
+      <p class="muted" id="accountMessage">Create an account or log in to your FunTok profile.</p>
+      <div id="signedInPanel" hidden>
+        <p id="signedInEmail" class="signed-in-email"></p>
+        <button id="logoutBtn" class="primary-btn" type="button">Log out</button>
+      </div>
+      <form id="authForm">
+        <label for="displayName" id="displayNameLabel">Display name</label>
+        <input id="displayName" type="text" autocomplete="name" placeholder="Your name" maxlength="40">
+        <label for="authEmail">Email address</label>
+        <input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" required>
+        <label for="authPassword">Password</label>
+        <input id="authPassword" type="password" autocomplete="current-password" placeholder="At least 6 characters" minlength="6" required>
+        <button id="authSubmit" class="primary-btn" type="submit">Create account</button>
+      </form>
+      <button id="authSwitch" class="text-btn" type="button">Already have an account? Log in</button>
+      <p id="authFeedback" class="auth-feedback" role="status"></p>
+    </div>
+  </section>
   <div id="toast" role="status" class="toast"></div>
   <script src="app.js"></script>
+  <script type="module" src="firebase-auth.js"></script>
 </body>
 </html>
