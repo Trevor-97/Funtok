@@ -222,7 +222,23 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// --- Responsive Video Upload & Feed Persistence ---
+// --- Inject Global CSS Fix for Taskbar & Device Responsiveness ---
+const styleFix = document.createElement("style");
+styleFix.innerHTML = `
+  /* Force the bottom navigation taskbar to always stay on top of everything */
+  nav, .nav, footer, header + nav, [class*="nav"], [class*="bar"], [class*="menu"] {
+    z-index: 99999 !important;
+  }
+  /* Ensure the video card fits nicely on mobile, tablet, and desktop without clipping the taskbar */
+  .video-card {
+    height: calc(100vh - 80px) !important;
+    max-height: calc(100% - 75px) !important;
+    box-sizing: border-box;
+  }
+`;
+document.head.appendChild(styleFix);
+
+// --- Video Upload & Feed Persistence ---
 const uploadBtn = document.querySelector("#uploadBtn");
 const videoInput = document.querySelector("#videoInput");
 const feed = document.querySelector("#feed");
@@ -233,8 +249,8 @@ function renderVideoCard(videoUrl, displayName, caption) {
   const newCard = document.createElement("article");
   newCard.className = "video-card theme-one";
   
-  // Responsive sizing across phones, tablets, and desktops: stays above the 70px bottom navigation bar and respects max-width constraints
-  newCard.style.cssText = "position: relative; width: 100%; max-width: 450px; height: calc(100vh - 70px); margin: 0 auto; z-index: 10; background: #000; display: flex; flex-direction: column; overflow: hidden;";
+  // Clean responsive dimensions tailored for all device types
+  newCard.style.cssText = "position: relative; width: 100%; max-width: 450px; height: calc(100vh - 85px); margin: 0 auto 15px auto; z-index: 5; background: #000; display: flex; flex-direction: column; overflow: hidden; border-radius: 12px;";
   
   newCard.innerHTML = `
     <div class="visual" style="width:100%; flex: 1; background: #000; display:flex; align-items:center; justify-content:center; overflow:hidden;">
