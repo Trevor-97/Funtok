@@ -151,7 +151,6 @@ onAuthStateChanged(auth, async (user) => {
     if (signedInPanel) {
       signedInPanel.hidden = false;
 
-      // Fetch existing user profile data from Firestore
       let userBio = "Hello! I am new on FunTok.";
       let userDisplayName = user.displayName || "";
       try {
@@ -166,7 +165,6 @@ onAuthStateChanged(auth, async (user) => {
         console.warn("Could not fetch user profile details:", e);
       }
 
-      // Populate signedInPanel with editable Profile fields
       signedInPanel.innerHTML = `
         <p class="signed-in-email" style="margin-bottom: 12px;"><b>Email:</b> ${user.email}</p>
         <div class="profile-edit-form" style="text-align: left;">
@@ -182,7 +180,6 @@ onAuthStateChanged(auth, async (user) => {
         </div>
       `;
 
-      // Save Profile Button Event Listener
       document.querySelector("#saveProfileBtn")?.addEventListener("click", async () => {
         const newName = document.querySelector("#editDisplayName").value.trim();
         const newBio = document.querySelector("#editBio").value.trim();
@@ -208,7 +205,6 @@ onAuthStateChanged(auth, async (user) => {
         }
       });
 
-      // Logout Button Event Listener
       document.querySelector("#logoutBtn")?.addEventListener("click", async () => {
         try { 
           await signOut(auth); 
@@ -226,30 +222,31 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// --- Video Upload & Feed LocalStorage Persistence ---
+// --- Responsive Video Upload & Feed Persistence ---
 const uploadBtn = document.querySelector("#uploadBtn");
 const videoInput = document.querySelector("#videoInput");
 const feed = document.querySelector("#feed");
 
-// Helper function to render a video card into the feed with proper spacing above the bottom nav bar
 function renderVideoCard(videoUrl, displayName, caption) {
   if (!feed) return;
   const avatarLetter = displayName.charAt(0).toUpperCase();
   const newCard = document.createElement("article");
   newCard.className = "video-card theme-one";
-  // Height restricted to calc(100% - 70px) so bottom taskbar remains completely visible and interactive
-  newCard.style.cssText = "position: absolute; top: 0; left: 0; width: 100%; height: calc(100% - 70px); z-index: 100; background: #000;";
+  
+  // Responsive sizing across phones, tablets, and desktops: stays above the 70px bottom navigation bar and respects max-width constraints
+  newCard.style.cssText = "position: relative; width: 100%; max-width: 450px; height: calc(100vh - 70px); margin: 0 auto; z-index: 10; background: #000; display: flex; flex-direction: column; overflow: hidden;";
+  
   newCard.innerHTML = `
-    <div class="visual" style="width:100%; height:100%; background: #000; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+    <div class="visual" style="width:100%; flex: 1; background: #000; display:flex; align-items:center; justify-content:center; overflow:hidden;">
       <video src="${videoUrl}" controls autoplay loop style="width:100%; height:100%; object-fit:cover;"></video>
     </div>
     <div class="video-shade"></div>
-    <div class="video-info" style="z-index: 110;">
+    <div class="video-info" style="z-index: 15;">
       <div class="creator"><span class="avatar">${avatarLetter}</span><b>@${displayName.toLowerCase().replace(/\s+/g, '')}</b><button class="follow">Follow</button></div>
       <p>${caption}</p>
       <span class="sound">♫ original sound — ${displayName.toLowerCase()}</span>
     </div>
-    <div class="actions" style="z-index: 110;">
+    <div class="actions" style="z-index: 15;">
       <button class="action like" aria-label="Like">♡<small>1</small></button>
       <button class="action comments" aria-label="Comments">▢<small>0</small></button>
       <button class="action share" aria-label="Share">➤<small>Share</small></button>
@@ -266,7 +263,6 @@ window.addEventListener("DOMContentLoaded", () => {
   savedVideos.reverse().forEach(v => renderVideoCard(v.videoUrl, v.displayName, v.caption));
 });
 
-// When the plus upload button is clicked
 uploadBtn?.addEventListener("click", () => {
   if (!auth.currentUser) {
     window.dispatchEvent(new CustomEvent("funtok:open-account"));
@@ -275,7 +271,6 @@ uploadBtn?.addEventListener("click", () => {
   videoInput?.click();
 });
 
-// When a video file is chosen from the computer
 videoInput?.addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -285,18 +280,15 @@ videoInput?.addEventListener("change", (e) => {
   const displayName = currentUser?.displayName || currentUser?.email?.split('@')[0] || "FunTok Creator";
   const caption = "My new FunTok video! 🎬 #FunTok";
 
-  // Render on screen immediately
   renderVideoCard(videoUrl, displayName, caption);
 
-  // Safely save session reference to localStorage without hitting storage quotas
   try {
     const savedVideos = JSON.parse(localStorage.getItem("funtok_videos") || "[]");
     savedVideos.push({ videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", displayName, caption });
     if (savedVideos.length > 5) savedVideos.shift();
     localStorage.setItem("funtok_videos", JSON.stringify(savedVideos));
-    console.log("Video session saved successfully!");
   } catch (err) {
-    console.warn("LocalStorage quota notice handled gracefully.");
+    console.warn("LocalStorage handled.");
   }
 
   videoInput.value = "";
