@@ -222,44 +222,47 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// --- Safe UI Fix for Bottom Navigation Bar ---
+// --- Inject Global CSS Fix for Taskbar & Device Responsiveness ---
 const styleFix = document.createElement("style");
 styleFix.innerHTML = `
-  /* Ensure bottom navigation bar stays permanently visible and clickable across all devices */
-  nav, .nav, footer, header + nav, [class*="nav"], [class*="bar"], [class*="menu"] {
+  /* Force the bottom navigation taskbar to always stay on top of everything */
+  nav, .bottom-nav, footer, header + nav, [class*="nav"], [class*="bar"], [class*="menu"] {
     z-index: 99999 !important;
   }
 `;
 document.head.appendChild(styleFix);
 
 // --- Video Upload & Feed Persistence ---
-const videoInput = document.querySelector("#videoInput");
 const feed = document.querySelector("#feed");
+const videoInput = document.querySelector("#videoInput");
 
 function renderVideoCard(videoUrl, displayName, caption) {
   if (!feed) return;
   const avatarLetter = displayName.charAt(0).toUpperCase();
   const newCard = document.createElement("article");
   newCard.className = "video-card theme-one";
-  newCard.style.cssText = "position: relative; width: 100%; max-width: 450px; height: calc(100vh - 85px); margin: 0 auto 15px auto; z-index: 5; background: #000; display: flex; flex-direction: column; overflow: hidden; border-radius: 12px;";
+  
+  // Perfectly sized absolute-positioned card displaying above the bottom taskbar
+  newCard.style.cssText = "position: absolute; top: 0; left: 0; width: 100%; height: calc(100% - 70px); z-index: 100; background: #000;";
   
   newCard.innerHTML = `
-    <div class="visual" style="width:100%; flex: 1; background: #000; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+    <div class="visual" style="width:100%; height:100%; background: #000; display:flex; align-items:center; justify-content:center; overflow:hidden;">
       <video src="${videoUrl}" controls autoplay loop style="width:100%; height:100%; object-fit:cover;"></video>
     </div>
     <div class="video-shade"></div>
-    <div class="video-info" style="z-index: 15;">
+    <div class="video-info" style="z-index: 110;">
       <div class="creator"><span class="avatar">${avatarLetter}</span><b>@${displayName.toLowerCase().replace(/\s+/g, '')}</b><button class="follow">Follow</button></div>
       <p>${caption}</p>
       <span class="sound">♫ original sound — ${displayName.toLowerCase()}</span>
     </div>
-    <div class="actions" style="z-index: 15;">
+    <div class="actions" style="z-index: 110;">
       <button class="action like" aria-label="Like">♡<small>1</small></button>
       <button class="action comments" aria-label="Comments">▢<small>0</small></button>
       <button class="action share" aria-label="Share">➤<small>Share</small></button>
       <span class="record">♫</span>
     </div>
   `;
+  
   feed.style.position = "relative";
   feed.prepend(newCard);
 }
@@ -270,7 +273,7 @@ window.addEventListener("DOMContentLoaded", () => {
   savedVideos.reverse().forEach(v => renderVideoCard(v.videoUrl, v.displayName, v.caption));
 });
 
-// When a video file is chosen from the computer via the native label/input
+// When a video file is chosen from the computer via the native file input overlay
 videoInput?.addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -282,50 +285,6 @@ videoInput?.addEventListener("change", (e) => {
 
   renderVideoCard(videoUrl, displayName, caption);
 
-  try {
-    const savedVideos = JSON.parse(localStorage.getItem("funtok_videos") || "[]");
-    savedVideos.push({ videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", displayName, caption });
-    if (savedVideos.length > 5) savedVideos.shift();
-    localStorage.setItem("funtok_videos", JSON.stringify(savedVideos));
-    console.log("Video posted successfully!");
-  } catch (err) {
-    console.warn("LocalStorage quota handled.");
-  }
-
-  videoInput.value = "";
-});
-
-window.addEventListener("funtok:open-account", openAccount);
-
-// Restore saved videos from localStorage safely when page loads
-window.addEventListener("DOMContentLoaded", () => {
-  const savedVideos = JSON.parse(localStorage.getItem("funtok_videos") || "[]");
-  savedVideos.reverse().forEach(v => renderVideoCard(v.videoUrl, v.displayName, v.caption));
-});
-
-// When the upload button is clicked
-uploadBtn?.addEventListener("click", () => {
-  if (!auth.currentUser) {
-    window.dispatchEvent(new CustomEvent("funtok:open-account"));
-    return;
-  }
-  videoInput?.click();
-});
-
-// When a video file is chosen from the computer
-videoInput?.addEventListener("change", (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const videoUrl = URL.createObjectURL(file);
-  const currentUser = auth.currentUser;
-  const displayName = currentUser?.displayName || currentUser?.email?.split('@')[0] || "FunTok Creator";
-  const caption = "My new FunTok video! 🎬 #FunTok";
-
-  // Render on screen immediately
-  renderVideoCard(videoUrl, displayName, caption);
-
-  // Safely save session reference to localStorage
   try {
     const savedVideos = JSON.parse(localStorage.getItem("funtok_videos") || "[]");
     savedVideos.push({ videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", displayName, caption });
