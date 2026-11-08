@@ -39,7 +39,13 @@
   <nav class="bottom-nav" aria-label="Main navigation">
     <button class="nav-item selected" data-nav="home"><span>⌂</span><small>Home</small></button>
     <button class="nav-item" data-nav="discover"><span>⌕</span><small>Discover</small></button>
-    <button class="upload-nav" id="uploadBtn" aria-label="Upload video">＋</button>
+    
+    <!-- Upload Button acting as a label wrapper for the file input -->
+    <label for="videoInput" class="upload-nav" id="uploadBtn" style="cursor: pointer; display: flex; align-items: center; justify-content: center;">
+      <span>＋</span>
+      <input type="file" id="videoInput" accept="video/*" style="display: none;" />
+    </label>
+
     <button class="nav-item" data-nav="inbox"><span>♡</span><small>Inbox</small></button>
     <button class="nav-item" data-nav="profile"><span>◉</span><small>Profile</small></button>
   </nav>
