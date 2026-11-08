@@ -273,27 +273,35 @@ window.addEventListener("DOMContentLoaded", () => {
   savedVideos.reverse().forEach(v => renderVideoCard(v.videoUrl, v.displayName, v.caption));
 });
 
-// When a video file is chosen from the computer via the native file input overlay
+// When a video file is chosen from the computer, convert it using FileReader for persistence
 videoInput?.addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (!file) return;
 
-  const videoUrl = URL.createObjectURL(file);
   const currentUser = auth.currentUser;
   const displayName = currentUser?.displayName || currentUser?.email?.split('@')[0] || "FunTok Creator";
   const caption = "My new FunTok video! 🎬 #FunTok";
 
-  renderVideoCard(videoUrl, displayName, caption);
-try {
-    const savedVideos = JSON.parse(localStorage.getItem("funtok_videos") || "[]");
-    savedVideos.push({ videoUrl, displayName, caption });
-    if (savedVideos.length > 5) savedVideos.shift();
-    localStorage.setItem("funtok_videos", JSON.stringify(savedVideos));
-    console.log("Video posted successfully!");
-  } catch (err) {
-    console.warn("LocalStorage quota handled.");
-  }
+  const reader = new FileReader();
+  reader.onload = function(uploadEvent) {
+    const videoDataUrl = uploadEvent.target.result;
 
+    // Render immediately on screen
+    renderVideoCard(videoDataUrl, displayName, caption);
+
+    // Save actual video data to localStorage so it persists across refreshes
+    try {
+      const savedVideos = JSON.parse(localStorage.getItem("funtok_videos") || "[]");
+      savedVideos.push({ videoUrl: videoDataUrl, displayName, caption });
+      if (savedVideos.length > 5) savedVideos.shift();
+      localStorage.setItem("funtok_videos", JSON.stringify(savedVideos));
+      console.log("Video posted and saved successfully!");
+    } catch (err) {
+      console.warn("LocalStorage quota exceeded (video file might be too large).", err);
+    }
+  };
+
+  reader.readAsDataURL(file);
   videoInput.value = "";
 });
 
