@@ -40,18 +40,16 @@
     <button class="nav-item selected" data-nav="home"><span>⌂</span><small>Home</small></button>
     <button class="nav-item" data-nav="discover"><span>⌕</span><small>Discover</small></button>
     
-    <!-- Upload Button acting as a label wrapper for the file input -->
-    <label for="videoInput" class="upload-nav" id="uploadBtn" style="cursor: pointer; display: flex; align-items: center; justify-content: center;">
-      <span>＋</span>
-      <input type="file" id="videoInput" accept="video/*" style="display: none;" />
-    </label>
+    <!-- Upload Button with Direct Native File Input Overlay (Bypasses security blocks) -->
+    <div style="position: relative; display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px;">
+      <button class="upload-nav" id="uploadBtn" aria-label="Upload video" style="pointer-events: none; width: 100%; height: 100%;">＋</button>
+      <input type="file" id="videoInput" accept="video/*" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 9999;">
+    </div>
 
     <button class="nav-item" data-nav="inbox"><span>♡</span><small>Inbox</small></button>
     <button class="nav-item" data-nav="profile"><span>◉</span><small>Profile</small></button>
   </nav>
 
-  <input id="videoInput" type="file" accept="video/*" hidden>
-  
   <section class="modal" id="commentsModal" aria-hidden="true">
     <div class="modal-panel"><div class="modal-head"><b>Comments</b><button class="close">✕</button></div><div id="commentList" class="comment-list"><p class="muted">Be the first to comment.</p></div><form id="commentForm"><input id="commentInput" placeholder="Add a comment…" maxlength="240" required><button>Post</button></form></div>
   </section>
