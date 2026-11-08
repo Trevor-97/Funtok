@@ -284,10 +284,9 @@ videoInput?.addEventListener("change", (e) => {
   const caption = "My new FunTok video! 🎬 #FunTok";
 
   renderVideoCard(videoUrl, displayName, caption);
-
-  try {
+try {
     const savedVideos = JSON.parse(localStorage.getItem("funtok_videos") || "[]");
-    savedVideos.push({ videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", displayName, caption });
+    savedVideos.push({ videoUrl, displayName, caption });
     if (savedVideos.length > 5) savedVideos.shift();
     localStorage.setItem("funtok_videos", JSON.stringify(savedVideos));
     console.log("Video posted successfully!");
