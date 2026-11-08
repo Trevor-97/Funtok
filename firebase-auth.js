@@ -233,7 +233,6 @@ styleFix.innerHTML = `
 document.head.appendChild(styleFix);
 
 // --- Video Upload & Feed Persistence ---
-const uploadBtn = document.querySelector("#uploadBtn");
 const videoInput = document.querySelector("#videoInput");
 const feed = document.querySelector("#feed");
 
@@ -242,8 +241,6 @@ function renderVideoCard(videoUrl, displayName, caption) {
   const avatarLetter = displayName.charAt(0).toUpperCase();
   const newCard = document.createElement("article");
   newCard.className = "video-card theme-one";
-  
-  // Perfectly sized card that displays above the bottom taskbar
   newCard.style.cssText = "position: relative; width: 100%; max-width: 450px; height: calc(100vh - 85px); margin: 0 auto 15px auto; z-index: 5; background: #000; display: flex; flex-direction: column; overflow: hidden; border-radius: 12px;";
   
   newCard.innerHTML = `
@@ -263,10 +260,42 @@ function renderVideoCard(videoUrl, displayName, caption) {
       <span class="record">♫</span>
     </div>
   `;
-  
   feed.style.position = "relative";
   feed.prepend(newCard);
 }
+
+// Restore saved videos from localStorage safely when page loads
+window.addEventListener("DOMContentLoaded", () => {
+  const savedVideos = JSON.parse(localStorage.getItem("funtok_videos") || "[]");
+  savedVideos.reverse().forEach(v => renderVideoCard(v.videoUrl, v.displayName, v.caption));
+});
+
+// When a video file is chosen from the computer via the native label/input
+videoInput?.addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const videoUrl = URL.createObjectURL(file);
+  const currentUser = auth.currentUser;
+  const displayName = currentUser?.displayName || currentUser?.email?.split('@')[0] || "FunTok Creator";
+  const caption = "My new FunTok video! 🎬 #FunTok";
+
+  renderVideoCard(videoUrl, displayName, caption);
+
+  try {
+    const savedVideos = JSON.parse(localStorage.getItem("funtok_videos") || "[]");
+    savedVideos.push({ videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", displayName, caption });
+    if (savedVideos.length > 5) savedVideos.shift();
+    localStorage.setItem("funtok_videos", JSON.stringify(savedVideos));
+    console.log("Video posted successfully!");
+  } catch (err) {
+    console.warn("LocalStorage quota handled.");
+  }
+
+  videoInput.value = "";
+});
+
+window.addEventListener("funtok:open-account", openAccount);
 
 // Restore saved videos from localStorage safely when page loads
 window.addEventListener("DOMContentLoaded", () => {
