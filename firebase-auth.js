@@ -225,14 +225,49 @@ onAuthStateChanged(auth, async (user) => {
     setMode("signup");
   }
 });
-// --- Video Upload & Feed Local Preview ---
+
+// --- Video Upload & Feed LocalStorage Persistence ---
 const uploadBtn = document.querySelector("#uploadBtn");
 const videoInput = document.querySelector("#videoInput");
 const feed = document.querySelector("#feed");
 
-// When the plus upload button is clicked, open file selector
+// Helper function to render a video card into the feed
+function renderVideoCard(videoUrl, displayName, caption) {
+  if (!feed) return;
+  const avatarLetter = displayName.charAt(0).toUpperCase();
+  const newCard = document.createElement("article");
+  newCard.className = "video-card theme-one";
+  // Height leaves room for the bottom taskbar
+  newCard.style.cssText = "position: absolute; top: 0; left: 0; width: 100%; height: calc(100% - 70px); z-index: 100; background: #000;";
+  newCard.innerHTML = `
+    <div class="visual" style="width:100%; height:100%; background: #000; display:flex; align-items:center; justify-content:center; overflow:hidden;">
+      <video src="${videoUrl}" controls autoplay loop style="width:100%; height:100%; object-fit:cover;"></video>
+    </div>
+    <div class="video-shade"></div>
+    <div class="video-info" style="z-index: 110;">
+      <div class="creator"><span class="avatar">${avatarLetter}</span><b>@${displayName.toLowerCase().replace(/\s+/g, '')}</b><button class="follow">Follow</button></div>
+      <p>${caption}</p>
+      <span class="sound">♫ original sound — ${displayName.toLowerCase()}</span>
+    </div>
+    <div class="actions" style="z-index: 110;">
+      <button class="action like" aria-label="Like">♡<small>1</small></button>
+      <button class="action comments" aria-label="Comments">▢<small>0</small></button>
+      <button class="action share" aria-label="Share">➤<small>Share</small></button>
+      <span class="record">♫</span>
+    </div>
+  `;
+  feed.style.position = "relative";
+  feed.prepend(newCard);
+}
+
+// Restore saved videos from localStorage when page loads
+window.addEventListener("DOMContentLoaded", () => {
+  const savedVideos = JSON.parse(localStorage.getItem("funtok_videos") || "[]");
+  savedVideos.reverse().forEach(v => renderVideoCard(v.videoUrl, v.displayName, v.caption));
+});
+
+// When the plus upload button is clicked
 uploadBtn?.addEventListener("click", () => {
-  // Optional: Check if user is logged in first
   if (!auth.currentUser) {
     window.dispatchEvent(new CustomEvent("funtok:open-account"));
     return;
@@ -245,50 +280,27 @@ videoInput?.addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (!file) return;
 
-  // Create a local object URL for the video file
-  const videoUrl = URL.createObjectURL(file);
-  const currentUser = auth.currentUser;
-  const displayName = currentUser?.displayName || currentUser?.email?.split('@')[0] || "FunTok Creator";
-  const avatarLetter = displayName.charAt(0).toUpperCase();
+  const reader = new FileReader();
+  reader.onload = function(uploadEvent) {
+    const videoDataUrl = uploadEvent.target.result;
+    const currentUser = auth.currentUser;
+    const displayName = currentUser?.displayName || currentUser?.email?.split('@')[0] || "FunTok Creator";
+    const caption = "My new FunTok video! 🎬 #FunTok";
 
-// Create a new video card element for the feed
-  const newCard = document.createElement("article");
-  newCard.className = "video-card theme-one";
-  // Match the exact CSS styling structure of the existing feed items
-  newCard.style.cssText = "position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; background: #000;";
-  newCard.innerHTML = `
-    <div class="visual" style="width:100%; height:100%; background: #000; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-      <video src="${videoUrl}" controls autoplay loop style="width:100%; height:100%; object-fit:cover;"></video>
-    </div>
-    <div class="video-shade"></div>
-    <div class="video-info" style="z-index: 110;">
-      <div class="creator"><span class="avatar">${avatarLetter}</span><b>@${displayName.toLowerCase().replace(/\s+/g, '')}</b><button class="follow">Follow</button></div>
-      <p>My new FunTok video! 🎬 #FunTok</p>
-      <span class="sound">♫ original sound — ${displayName.toLowerCase()}</span>
-    </div>
-    <div class="actions" style="z-index: 110;">
-      <button class="action like" aria-label="Like">♡<small>1</small></button>
-      <button class="action comments" aria-label="Comments">▢<small>0</small></button>
-      <button class="action share" aria-label="Share">➤<small>Share</small></button>
-      <span class="record">♫</span>
-    </div>
-  `;
+    // Render on screen
+    renderVideoCard(videoDataUrl, displayName, caption);
 
-  // Prepend directly into the feed container so it covers the current view
-  if (feed) {
-    feed.style.position = "relative";
-    feed.prepend(newCard);
-  }
-  
+    // Save to localStorage (keeping up to the last 5 videos to stay within browser limits)
+    const savedVideos = JSON.parse(localStorage.getItem("funtok_videos") || "[]");
+    savedVideos.push({ videoUrl: videoDataUrl, displayName, caption });
+    if (savedVideos.length > 5) savedVideos.shift();
+    localStorage.setItem("funtok_videos", JSON.stringify(savedVideos));
+
+    console.log("Video saved to browser storage and added to feed!");
+  };
+
+  reader.readAsDataURL(file);
   videoInput.value = "";
-  console.log("Video overlaid on active feed!");
-  // Insert the new video at the very top of the feed
-  feed?.prepend(newCard);
-  
-  // Reset input so the same file can be uploaded again if needed
-  videoInput.value = "";
-  
-  // Show a toast or feedback if you'd like
-  console.log("Video uploaded and added to local feed!");
 });
+
 window.addEventListener("funtok:open-account", openAccount);
