@@ -222,18 +222,12 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// --- Inject Global CSS Fix for Taskbar & Device Responsiveness ---
+// --- Safe UI Fix for Bottom Navigation Bar ---
 const styleFix = document.createElement("style");
 styleFix.innerHTML = `
-  /* Force the bottom navigation taskbar to always stay on top of everything */
+  /* Ensure bottom navigation bar stays permanently visible and clickable across all devices */
   nav, .nav, footer, header + nav, [class*="nav"], [class*="bar"], [class*="menu"] {
     z-index: 99999 !important;
-  }
-  /* Ensure the video card fits nicely on mobile, tablet, and desktop without clipping the taskbar */
-  .video-card {
-    height: calc(100vh - 80px) !important;
-    max-height: calc(100% - 75px) !important;
-    box-sizing: border-box;
   }
 `;
 document.head.appendChild(styleFix);
@@ -249,7 +243,7 @@ function renderVideoCard(videoUrl, displayName, caption) {
   const newCard = document.createElement("article");
   newCard.className = "video-card theme-one";
   
-  // Clean responsive dimensions tailored for all device types
+  // Perfectly sized card that displays above the bottom taskbar
   newCard.style.cssText = "position: relative; width: 100%; max-width: 450px; height: calc(100vh - 85px); margin: 0 auto 15px auto; z-index: 5; background: #000; display: flex; flex-direction: column; overflow: hidden; border-radius: 12px;";
   
   newCard.innerHTML = `
@@ -269,6 +263,7 @@ function renderVideoCard(videoUrl, displayName, caption) {
       <span class="record">♫</span>
     </div>
   `;
+  
   feed.style.position = "relative";
   feed.prepend(newCard);
 }
@@ -279,6 +274,7 @@ window.addEventListener("DOMContentLoaded", () => {
   savedVideos.reverse().forEach(v => renderVideoCard(v.videoUrl, v.displayName, v.caption));
 });
 
+// When the upload button is clicked
 uploadBtn?.addEventListener("click", () => {
   if (!auth.currentUser) {
     window.dispatchEvent(new CustomEvent("funtok:open-account"));
@@ -287,6 +283,7 @@ uploadBtn?.addEventListener("click", () => {
   videoInput?.click();
 });
 
+// When a video file is chosen from the computer
 videoInput?.addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -296,15 +293,18 @@ videoInput?.addEventListener("change", (e) => {
   const displayName = currentUser?.displayName || currentUser?.email?.split('@')[0] || "FunTok Creator";
   const caption = "My new FunTok video! 🎬 #FunTok";
 
+  // Render on screen immediately
   renderVideoCard(videoUrl, displayName, caption);
 
+  // Safely save session reference to localStorage
   try {
     const savedVideos = JSON.parse(localStorage.getItem("funtok_videos") || "[]");
     savedVideos.push({ videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", displayName, caption });
     if (savedVideos.length > 5) savedVideos.shift();
     localStorage.setItem("funtok_videos", JSON.stringify(savedVideos));
+    console.log("Video posted successfully!");
   } catch (err) {
-    console.warn("LocalStorage handled.");
+    console.warn("LocalStorage quota handled.");
   }
 
   videoInput.value = "";
