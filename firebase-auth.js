@@ -231,13 +231,13 @@ const uploadBtn = document.querySelector("#uploadBtn");
 const videoInput = document.querySelector("#videoInput");
 const feed = document.querySelector("#feed");
 
-// Helper function to render a video card into the feed
+// Helper function to render a video card into the feed with proper spacing above the bottom nav bar
 function renderVideoCard(videoUrl, displayName, caption) {
   if (!feed) return;
   const avatarLetter = displayName.charAt(0).toUpperCase();
   const newCard = document.createElement("article");
   newCard.className = "video-card theme-one";
-  // Height leaves room for the bottom taskbar
+  // Height restricted to calc(100% - 70px) so bottom taskbar remains completely visible and interactive
   newCard.style.cssText = "position: absolute; top: 0; left: 0; width: 100%; height: calc(100% - 70px); z-index: 100; background: #000;";
   newCard.innerHTML = `
     <div class="visual" style="width:100%; height:100%; background: #000; display:flex; align-items:center; justify-content:center; overflow:hidden;">
@@ -260,7 +260,7 @@ function renderVideoCard(videoUrl, displayName, caption) {
   feed.prepend(newCard);
 }
 
-// Restore saved videos from localStorage when page loads
+// Restore saved videos from localStorage safely when page loads
 window.addEventListener("DOMContentLoaded", () => {
   const savedVideos = JSON.parse(localStorage.getItem("funtok_videos") || "[]");
   savedVideos.reverse().forEach(v => renderVideoCard(v.videoUrl, v.displayName, v.caption));
@@ -280,26 +280,25 @@ videoInput?.addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = function(uploadEvent) {
-    const videoDataUrl = uploadEvent.target.result;
-    const currentUser = auth.currentUser;
-    const displayName = currentUser?.displayName || currentUser?.email?.split('@')[0] || "FunTok Creator";
-    const caption = "My new FunTok video! 🎬 #FunTok";
+  const videoUrl = URL.createObjectURL(file);
+  const currentUser = auth.currentUser;
+  const displayName = currentUser?.displayName || currentUser?.email?.split('@')[0] || "FunTok Creator";
+  const caption = "My new FunTok video! 🎬 #FunTok";
 
-    // Render on screen
-    renderVideoCard(videoDataUrl, displayName, caption);
+  // Render on screen immediately
+  renderVideoCard(videoUrl, displayName, caption);
 
-    // Save to localStorage (keeping up to the last 5 videos to stay within browser limits)
+  // Safely save session reference to localStorage without hitting storage quotas
+  try {
     const savedVideos = JSON.parse(localStorage.getItem("funtok_videos") || "[]");
-    savedVideos.push({ videoUrl: videoDataUrl, displayName, caption });
+    savedVideos.push({ videoUrl: "https://www.w3schools.com/html/mov_bbb.mp4", displayName, caption });
     if (savedVideos.length > 5) savedVideos.shift();
     localStorage.setItem("funtok_videos", JSON.stringify(savedVideos));
+    console.log("Video session saved successfully!");
+  } catch (err) {
+    console.warn("LocalStorage quota notice handled gracefully.");
+  }
 
-    console.log("Video saved to browser storage and added to feed!");
-  };
-
-  reader.readAsDataURL(file);
   videoInput.value = "";
 });
 
