@@ -1,19 +1,6 @@
-// Firebase Authentication and Firestore for FunTok
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  updateProfile,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  getDoc
-} from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+import { initializeApp } from "[https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js](https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js)";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "[https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js](https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js)";
+import { getFirestore, doc, setDoc, getDoc } from "[https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js](https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js)";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA6DUPIHXVQoMNNPFIG3pViyQDwQHdNPQI",
@@ -28,7 +15,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// DOM Elements
+// DOM Elements & Auth Setup
 const modal = document.querySelector("#accountModal");
 const form = document.querySelector("#authForm");
 const displayName = document.querySelector("#displayName");
@@ -45,19 +32,8 @@ const signedInEmail = document.querySelector("#signedInEmail");
 const accountButton = document.querySelector("#accountBtn");
 let mode = "signup";
 
-function openAccount(){ 
-  if (modal) {
-    modal.classList.add("open"); 
-    modal.setAttribute("aria-hidden","false"); 
-  }
-}
-
-function closeAccount(){ 
-  if (modal) {
-    modal.classList.remove("open"); 
-    modal.setAttribute("aria-hidden","true"); 
-  }
-}
+function openAccount(){ if (modal) { modal.classList.add("open"); modal.setAttribute("aria-hidden","false"); } }
+function closeAccount(){ if (modal) { modal.classList.remove("open"); modal.setAttribute("aria-hidden","true"); } }
 
 function setMode(nextMode){
   mode = nextMode;
@@ -72,18 +48,11 @@ function setMode(nextMode){
   if(feedback) feedback.textContent = "";
 }
 
-// Modal Click Listeners
 accountButton?.addEventListener("click", openAccount);
 document.querySelector('[data-nav="profile"]')?.addEventListener("click", openAccount);
-
 document.addEventListener("click", (e) => {
-  if (e.target.matches('#accountModal .close')) {
-    closeAccount();
-  } else if (e.target === modal) {
-    closeAccount();
-  }
+  if (e.target.matches('#accountModal .close') || e.target === modal) closeAccount();
 });
-
 switchButton?.addEventListener("click", () => setMode(mode === "signup" ? "login" : "signup"));
 
 function readableError(error){
@@ -93,14 +62,12 @@ function readableError(error){
     "auth/invalid-email": "Please enter a valid email address.",
     "auth/weak-password": "Choose a stronger password with at least 6 characters.",
     "auth/invalid-credential": "Email or password is incorrect. Check them and try again.",
-    "auth/network-request-failed": "Network problem. Check your internet connection and try again.",
-    "auth/too-many-requests": "Too many attempts. Please wait a while and try again.",
-    "auth/unauthorized-domain": "This website domain is not authorized in Firebase yet."
+    "auth/network-request-failed": "Network problem. Check your internet connection.",
+    "auth/too-many-requests": "Too many attempts. Please wait."
   };
-  return messages[code] || `Something went wrong (${code || "unknown error"}). Please try again.`;
+  return messages[code] || `Something went wrong (${code}). Please try again.`;
 }
 
-// Auth Form Submit Handlers
 form?.addEventListener("submit", async (event) => {
   event.preventDefault();
   if(feedback) feedback.textContent = "Working…";
@@ -109,27 +76,15 @@ form?.addEventListener("submit", async (event) => {
     if (mode === "signup") {
       const result = await createUserWithEmailAndPassword(auth, email.value.trim(), password.value);
       const name = displayName.value.trim();
-      
-      if (name) {
-        await updateProfile(result.user, { displayName: name });
-      }
-
+      if (name) await updateProfile(result.user, { displayName: name });
       await setDoc(doc(db, "users", result.user.uid), {
-        uid: result.user.uid,
-        email: result.user.email,
-        username: name || result.user.email.split('@')[0],
-        displayName: name || "FunTok User",
-        bio: "Hello! I am new on FunTok.",
-        profilePicture: "",
-        followersCount: 0,
-        followingCount: 0,
-        createdAt: new Date().toISOString()
+        uid: result.user.uid, email: result.user.email, username: name || result.user.email.split('@')[0],
+        displayName: name || "FunTok User", bio: "Hello! I am new on FunTok.", createdAt: new Date().toISOString()
       });
-
-      if(feedback) feedback.textContent = "Your FunTok account has been created!";
+      if(feedback) feedback.textContent = "Account created!";
     } else {
       await signInWithEmailAndPassword(auth, email.value.trim(), password.value);
-      if(feedback) feedback.textContent = "You are now logged in!";
+      if(feedback) feedback.textContent = "Logged in!";
     }
     form.reset();
   } catch (error) {
@@ -139,7 +94,6 @@ form?.addEventListener("submit", async (event) => {
   }
 });
 
-// Authentication State & Profile Management Loader
 onAuthStateChanged(auth, async (user) => {
   if (user) {
     if(accountButton) accountButton.textContent = "My account";
@@ -147,33 +101,25 @@ onAuthStateChanged(auth, async (user) => {
     if(switchButton) switchButton.hidden = true;
     if(title) title.textContent = "Your FunTok Profile";
     if(message) message.textContent = "Manage your bio and account details.";
-
     if (signedInPanel) {
       signedInPanel.hidden = false;
-
       let userBio = "Hello! I am new on FunTok.";
       let userDisplayName = user.displayName || "";
       try {
-        const userRef = doc(db, "users", user.uid);
-        const docSnap = await getDoc(userRef);
+        const docSnap = await getDoc(doc(db, "users", user.uid));
         if (docSnap.exists()) {
-          const data = docSnap.data();
-          userBio = data.bio || userBio;
-          userDisplayName = data.displayName || userDisplayName;
+          userBio = docSnap.data().bio || userBio;
+          userDisplayName = docSnap.data().displayName || userDisplayName;
         }
-      } catch (e) {
-        console.warn("Could not fetch user profile details:", e);
-      }
+      } catch (e) { console.warn(e); }
 
       signedInPanel.innerHTML = `
         <p class="signed-in-email" style="margin-bottom: 12px;"><b>Email:</b> ${user.email}</p>
         <div class="profile-edit-form" style="text-align: left;">
           <label style="display:block; font-size: 14px; margin-bottom: 5px; color: #ccc;">Display Name</label>
           <input id="editDisplayName" type="text" value="${userDisplayName}" style="width:100%; padding:10px; margin-bottom:12px; background:#222; color:#fff; border:1px solid #444; border-radius:6px;">
-          
           <label style="display:block; font-size: 14px; margin-bottom: 5px; color: #ccc;">Bio</label>
           <textarea id="editBio" rows="3" style="width:100%; padding:10px; margin-bottom:15px; background:#222; color:#fff; border:1px solid #444; border-radius:6px;">${userBio}</textarea>
-          
           <button id="saveProfileBtn" class="primary-btn" type="button" style="width:100%; margin-bottom: 10px;">Save Profile</button>
           <button id="logoutBtn" class="primary-btn" type="button" style="width:100%; background: #333; color: #fff;">Log out</button>
           <p id="profileFeedback" style="margin-top: 8px; font-size: 13px; text-align: center; color: #4ade80;"></p>
@@ -184,34 +130,14 @@ onAuthStateChanged(auth, async (user) => {
         const newName = document.querySelector("#editDisplayName").value.trim();
         const newBio = document.querySelector("#editBio").value.trim();
         const feedbackEl = document.querySelector("#profileFeedback");
-        
-        feedbackEl.style.color = "#4ade80";
         feedbackEl.textContent = "Saving...";
         try {
-          await setDoc(doc(db, "users", user.uid), {
-            displayName: newName,
-            bio: newBio
-          }, { merge: true });
-
-          if (newName) {
-            await updateProfile(user, { displayName: newName });
-          }
-
-          feedbackEl.textContent = "Profile updated successfully!";
-        } catch (err) {
-          console.error("Error updating profile:", err);
-          feedbackEl.style.color = "#ef4444";
-          feedbackEl.textContent = "Failed to update profile.";
-        }
+          await setDoc(doc(db, "users", user.uid), { displayName: newName, bio: newBio }, { merge: true });
+          if (newName) await updateProfile(user, { displayName: newName });
+          feedbackEl.textContent = "Saved successfully!";
+        } catch (err) { feedbackEl.textContent = "Failed."; }
       });
-
-      document.querySelector("#logoutBtn")?.addEventListener("click", async () => {
-        try { 
-          await signOut(auth); 
-        } catch (error) { 
-          console.error("Logout error:", error);
-        }
-      });
+      document.querySelector("#logoutBtn")?.addEventListener("click", async () => { await signOut(auth); });
     }
   } else {
     if(accountButton) accountButton.textContent = "Log in";
@@ -222,17 +148,12 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-// --- Inject Global CSS Fix for Taskbar & Device Responsiveness ---
+// Global CSS Taskbar Fix
 const styleFix = document.createElement("style");
-styleFix.innerHTML = `
-  /* Force the bottom navigation taskbar to always stay on top of everything */
-  nav, .bottom-nav, footer, header + nav, [class*="nav"], [class*="bar"], [class*="menu"] {
-    z-index: 99999 !important;
-  }
-`;
+styleFix.innerHTML = `nav, .bottom-nav, footer, header + nav, [class*="nav"], [class*="bar"], [class*="menu"] { z-index: 99999 !important; }`;
 document.head.appendChild(styleFix);
 
-// --- Video Upload & Feed Persistence ---
+// Video Upload & Feed Persistence
 const feed = document.querySelector("#feed");
 const videoInput = document.querySelector("#videoInput");
 
@@ -241,8 +162,6 @@ function renderVideoCard(videoUrl, displayName, caption) {
   const avatarLetter = displayName.charAt(0).toUpperCase();
   const newCard = document.createElement("article");
   newCard.className = "video-card theme-one";
-  
-  // Perfectly sized absolute-positioned card displaying above the bottom taskbar
   newCard.style.cssText = "position: absolute; top: 0; left: 0; width: 100%; height: calc(100% - 70px); z-index: 100; background: #000;";
   
   newCard.innerHTML = `
@@ -262,18 +181,15 @@ function renderVideoCard(videoUrl, displayName, caption) {
       <span class="record">♫</span>
     </div>
   `;
-  
   feed.style.position = "relative";
   feed.prepend(newCard);
 }
 
-// Restore saved videos from localStorage safely when page loads
 window.addEventListener("DOMContentLoaded", () => {
   const savedVideos = JSON.parse(localStorage.getItem("funtok_videos") || "[]");
   savedVideos.reverse().forEach(v => renderVideoCard(v.videoUrl, v.displayName, v.caption));
 });
 
-// When a video file is chosen from the computer, convert it using FileReader for persistence
 videoInput?.addEventListener("change", (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -285,11 +201,8 @@ videoInput?.addEventListener("change", (e) => {
   const reader = new FileReader();
   reader.onload = function(uploadEvent) {
     const videoDataUrl = uploadEvent.target.result;
-
-    // Render immediately on screen
     renderVideoCard(videoDataUrl, displayName, caption);
 
-    // Save actual video data to localStorage so it persists across refreshes
     try {
       const savedVideos = JSON.parse(localStorage.getItem("funtok_videos") || "[]");
       savedVideos.push({ videoUrl: videoDataUrl, displayName, caption });
@@ -297,12 +210,9 @@ videoInput?.addEventListener("change", (e) => {
       localStorage.setItem("funtok_videos", JSON.stringify(savedVideos));
       console.log("Video posted and saved successfully!");
     } catch (err) {
-      console.warn("LocalStorage quota exceeded (video file might be too large).", err);
+      console.warn("LocalStorage quota exceeded.", err);
     }
   };
-
   reader.readAsDataURL(file);
   videoInput.value = "";
 });
-
-window.addEventListener("funtok:open-account", openAccount);
