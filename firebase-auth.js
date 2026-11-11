@@ -1,6 +1,6 @@
-import { initializeApp } from "[https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js](https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js)";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "[https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js](https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js)";
-import { getFirestore, doc, setDoc, getDoc } from "[https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js](https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js)";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, collection, addCollection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA6DUPIHXVQoMNNPFIG3pViyQDwQHdNPQI",
@@ -14,6 +14,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// Cloudinary Configuration
+const CLOUD_NAME = "ecgad8fi";
+const UPLOAD_PRESET = "funtok_upload";
 
 // DOM Elements & Auth Setup
 const modal = document.querySelector("#accountModal");
@@ -153,20 +157,20 @@ const styleFix = document.createElement("style");
 styleFix.innerHTML = `nav, .bottom-nav, footer, header + nav, [class*="nav"], [class*="bar"], [class*="menu"] { z-index: 99999 !important; }`;
 document.head.appendChild(styleFix);
 
-// Video Upload & Feed Persistence
+// Video Upload & Cloudinary Feed Integration
 const feed = document.querySelector("#feed");
 const videoInput = document.querySelector("#videoInput");
 
 function renderVideoCard(videoUrl, displayName, caption) {
   if (!feed) return;
-  const avatarLetter = displayName.charAt(0).toUpperCase();
+  const avatarLetter = displayName ? displayName.charAt(0).toUpperCase() : "F";
   const newCard = document.createElement("article");
   newCard.className = "video-card theme-one";
   newCard.style.cssText = "position: absolute; top: 0; left: 0; width: 100%; height: calc(100% - 70px); z-index: 100; background: #000;";
   
   newCard.innerHTML = `
     <div class="visual" style="width:100%; height:100%; background: #000; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-      <video src="${videoUrl}" controls autoplay loop style="width:100%; height:100%; object-fit:cover;"></video>
+      <video src="${videoUrl}" controls autoplay loop playsinline style="width:100%; height:100%; object-fit:cover;"></video>
     </div>
     <div class="video-shade"></div>
     <div class="video-info" style="z-index: 110;">
@@ -185,34 +189,76 @@ function renderVideoCard(videoUrl, displayName, caption) {
   feed.prepend(newCard);
 }
 
+// Load Videos from Firestore on Startup
+async function loadVideosFromFirestore() {
+  try {
+    const q = query(collection(db, "videos"), orderBy("createdAt", "desc"));
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      renderVideoCard(data.videoUrl, data.displayName, data.caption);
+    });
+  } catch (err) {
+    console.warn("Error loading videos from Firestore:", err);
+  }
+}
+
 window.addEventListener("DOMContentLoaded", () => {
-  const savedVideos = JSON.parse(localStorage.getItem("funtok_videos") || "[]");
-  savedVideos.reverse().forEach(v => renderVideoCard(v.videoUrl, v.displayName, v.caption));
+  loadVideosFromFirestore();
 });
 
-videoInput?.addEventListener("change", (e) => {
+// Handle Video Upload to Cloudinary & Save to Firestore
+videoInput?.addEventListener("change", async (e) => {
   const file = e.target.files[0];
   if (!file) return;
 
   const currentUser = auth.currentUser;
-  const displayName = currentUser?.displayName || currentUser?.email?.split('@')[0] || "FunTok Creator";
+  if (!currentUser) {
+    alert("Please log in before posting a video!");
+    videoInput.value = "";
+    return;
+  }
+
+  const displayName = currentUser.displayName || currentUser.email.split('@')[0] || "FunTok Creator";
   const caption = "My new FunTok video! 🎬 #FunTok";
 
-  const reader = new FileReader();
-  reader.onload = function(uploadEvent) {
-    const videoDataUrl = uploadEvent.target.result;
-    renderVideoCard(videoDataUrl, displayName, caption);
+  // Visual feedback that it's uploading
+  alert("Uploading video to Cloudinary... Please wait a moment!");
 
-    try {
-      const savedVideos = JSON.parse(localStorage.getItem("funtok_videos") || "[]");
-      savedVideos.push({ videoUrl: videoDataUrl, displayName, caption });
-      if (savedVideos.length > 5) savedVideos.shift();
-      localStorage.setItem("funtok_videos", JSON.stringify(savedVideos));
-      console.log("Video posted and saved successfully!");
-    } catch (err) {
-      console.warn("LocalStorage quota exceeded.", err);
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", UPLOAD_PRESET);
+
+  try {
+    // 1. Upload to Cloudinary
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`, {
+      method: "POST",
+      body: formData
+    });
+    
+    const data = await response.json();
+    if (!data.secure_url) {
+      throw new Error("Upload failed from Cloudinary.");
     }
-  };
-  reader.readAsDataURL(file);
-  videoInput.value = "";
+
+    const videoUrl = data.secure_url;
+
+    // 2. Save video metadata to Cloud Firestore
+    await addDoc(collection(db, "videos"), {
+      videoUrl: videoUrl,
+      uid: currentUser.uid,
+      displayName: displayName,
+      caption: caption,
+      createdAt: new Date().toISOString()
+    });
+
+    // 3. Render immediately on screen
+    renderVideoCard(videoUrl, displayName, caption);
+    alert("Video posted successfully to the cloud!");
+  } catch (err) {
+    console.error("Upload error:", err);
+    alert("Failed to upload video. Check console for details.");
+  } finally {
+    videoInput.value = "";
+  }
 });
