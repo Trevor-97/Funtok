@@ -249,7 +249,7 @@ videoInput?.addEventListener("change", async (e) => {
   formData.append("upload_preset", UPLOAD_PRESET);
 
   try {
-    const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {
       method: "POST",
       body: formData
     });
