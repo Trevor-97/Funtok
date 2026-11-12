@@ -243,7 +243,9 @@ async function uploadVideo(file, caption) {
   if (uploadStatus) uploadStatus.textContent = "Uploading video...";
   if (uploadProgressBar) uploadProgressBar.style.width = "35%";
 
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`
+
+                          , {
     method: "POST",
     body: formData
   });
