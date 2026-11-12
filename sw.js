@@ -1,4 +1,4 @@
-const CACHE = "funtok-v2";
+const CACHE = "funtok-v3";
 
 const APP_SHELL = [
   "./",
