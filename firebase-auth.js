@@ -249,14 +249,15 @@ videoInput?.addEventListener("change", async (e) => {
   formData.append("upload_preset", UPLOAD_PRESET);
 
   try {
-    const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`, {
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
       method: "POST",
       body: formData
     });
     
     const data = await response.json();
     if (!data.secure_url) {
-      throw new Error("Upload failed from Cloudinary.");
+      console.error("Cloudinary Error Details:", data);
+      throw new Error(data.error?.message || "Upload failed from Cloudinary.");
     }
 
     const videoUrl = data.secure_url;
@@ -273,7 +274,7 @@ videoInput?.addEventListener("change", async (e) => {
     console.log("Video posted successfully to the cloud!");
   } catch (err) {
     console.error("Upload error:", err);
-    alert("Failed to upload video. Check console for details.");
+    alert("Failed to upload video: " + err.message);
   } finally {
     videoInput.value = "";
   }
