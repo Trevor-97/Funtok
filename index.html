@@ -10,75 +10,333 @@
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="#" aria-label="FunTok home"><span class="brand-mark">F</span><span>Fun<span class="accent">Tok</span></span></a>
-    <div class="feed-tabs"><button class="tab active" data-feed="for-you">For You</button><button class="tab" data-feed="following">Following</button></div>
-    <div class="top-actions"><button class="icon-btn" id="searchBtn" aria-label="Search">⌕</button><button class="account-btn" id="accountBtn" aria-label="Account">Log in</button></div>
-  </header>
+    <a class="brand" href="#" aria-label="FunTok home">
+      <span class="brand-mark">F</span>
+      <span>Fun<span class="accent">Tok</span></span>
+    </a>
+<div class="feed-tabs">
+  <button class="tab active" type="button" data-feed="for-you">
+    For You
+  </button>
 
+  <button class="tab" type="button" data-feed="following">
+    Following
+  </button>
+</div>
+
+<div class="top-actions">
+  <button class="icon-btn" id="searchBtn" type="button" aria-label="Search">
+    ⌕
+  </button>
+
+  <button class="account-btn" id="accountBtn" type="button">
+    Log in
+  </button>
+</div>
+
+  </header>
   <main id="feed" class="feed" aria-label="Video feed">
     <article class="video-card theme-one">
-      <div class="visual visual-one"><span class="visual-kicker">YOUR NEXT<br>FAVOURITE</span><span class="visual-big">MOMENT</span><span class="visual-small">Make it count ✨</span></div>
-      <div class="video-shade"></div>
-      <div class="video-info"><div class="creator"><span class="avatar">J</span><b>@joy.creates</b><button class="follow">Follow</button></div><p>Little moments make the best memories. ✨ #FunTok #GoodVibes</p><span class="sound">♫ original sound — joy.creates</span></div>
-      <div class="actions"><button class="action like" aria-label="Like">♡<small>1.2K</small></button><button class="action comments" aria-label="Comments">▢<small>84</small></button><button class="action share" aria-label="Share">➤<small>Share</small></button><span class="record">♫</span></div>
-    </article>
-    <article class="video-card theme-two">
-      <div class="visual visual-two"><span class="visual-kicker">CREATE<br>SOMETHING</span><span class="visual-big">NEW</span><span class="visual-small">Your story. Your style. 🎬</span></div>
-      <div class="video-shade"></div>
-      <div class="video-info"><div class="creator"><span class="avatar purple">K</span><b>@kevin.daily</b><button class="follow">Follow</button></div><p>Trying something different today. What do you think? #CreativeLife</p><span class="sound">♫ sunny day — FunTok sounds</span></div>
-      <div class="actions"><button class="action like" aria-label="Like">♡<small>958</small></button><button class="action comments" aria-label="Comments">▢<small>42</small></button><button class="action share" aria-label="Share">➤<small>Share</small></button><span class="record">♫</span></div>
-    </article>
-    <article class="video-card theme-three">
-      <div class="visual visual-three"><span class="visual-kicker">GOOD ENERGY</span><span class="visual-big">ONLY</span><span class="visual-small">Pass the positive vibes 🌍</span></div>
-      <div class="video-shade"></div>
-      <div class="video-info"><div class="creator"><span class="avatar orange">A</span><b>@amanda.vibes</b><button class="follow">Follow</button></div><p>Sending positive energy your way! 💫 #GoodEnergy</p><span class="sound">♫ feel good — amanda.vibes</span></div>
-      <div class="actions"><button class="action like" aria-label="Like">♡<small>2.4K</small></button><button class="action comments" aria-label="Comments">▢<small>109</small></button><button class="action share" aria-label="Share">➤<small>Share</small></button><span class="record">♫</span></div>
-    </article>
-  </main>
+      <div class="visual visual-one">
+        <span class="visual-kicker">YOUR NEXT<br>FAVOURITE</span>
+        <span class="visual-big">MOMENT</span>
+        <span class="visual-small">Make it count ✨</span>
+      </div>
+  <div class="video-shade"></div>
 
-  <nav class="bottom-nav" aria-label="Main navigation">
-    <button class="nav-item selected" data-nav="home"><span>⌂</span><small>Home</small></button>
-    <button class="nav-item" data-nav="discover"><span>⌕</span><small>Discover</small></button>
-    
-    <!-- Upload Button with Direct Native File Input Overlay (Bypasses security blocks) -->
-    <div style="position: relative; display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px;">
-      <button class="upload-nav" id="uploadBtn" aria-label="Upload video" style="pointer-events: none; width: 100%; height: 100%;">＋</button>
-      <input type="file" id="videoInput" accept="video/*" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 9999;">
+  <div class="video-info">
+    <div class="creator">
+      <span class="avatar">J</span>
+      <b>@joy.creates</b>
+      <button class="follow" type="button">Follow</button>
     </div>
 
-    <button class="nav-item" data-nav="inbox"><span>♡</span><small>Inbox</small></button>
-    <button class="nav-item" data-nav="profile"><span>◉</span><small>Profile</small></button>
-  </nav>
+    <p>Little moments make the best memories. ✨ #FunTok #GoodVibes</p>
+    <span class="sound">♫ original sound — joy.creates</span>
+  </div>
 
+  <div class="actions">
+    <button class="action like" type="button" aria-label="Like">
+      ♡
+      <small>1.2K</small>
+    </button>
+
+    <button class="action comments" type="button" aria-label="Comments">
+      ▢
+      <small>84</small>
+    </button>
+
+    <button class="action share" type="button" aria-label="Share">
+      ➤
+      <small>Share</small>
+    </button>
+
+    <span class="record">♫</span>
+  </div>
+</article>
+
+<article class="video-card theme-two">
+  <div class="visual visual-two">
+    <span class="visual-kicker">CREATE<br>SOMETHING</span>
+    <span class="visual-big">NEW</span>
+    <span class="visual-small">Your story. Your style. 🎬</span>
+  </div>
+
+  <div class="video-shade"></div>
+
+  <div class="video-info">
+    <div class="creator">
+      <span class="avatar purple">K</span>
+      <b>@kevin.daily</b>
+      <button class="follow" type="button">Follow</button>
+    </div>
+
+    <p>Trying something different today. What do you think? #CreativeLife</p>
+    <span class="sound">♫ sunny day — FunTok sounds</span>
+  </div>
+
+  <div class="actions">
+    <button class="action like" type="button" aria-label="Like">
+      ♡
+      <small>958</small>
+    </button>
+
+    <button class="action comments" type="button" aria-label="Comments">
+      ▢
+      <small>42</small>
+    </button>
+
+    <button class="action share" type="button" aria-label="Share">
+      ➤
+      <small>Share</small>
+    </button>
+
+    <span class="record">♫</span>
+  </div>
+</article>
+
+<article class="video-card theme-three">
+  <div class="visual visual-three">
+    <span class="visual-kicker">GOOD ENERGY</span>
+    <span class="visual-big">ONLY</span>
+    <span class="visual-small">Pass the positive vibes 🌍</span>
+  </div>
+
+  <div class="video-shade"></div>
+
+  <div class="video-info">
+    <div class="creator">
+      <span class="avatar orange">A</span>
+      <b>@amanda.vibes</b>
+      <button class="follow" type="button">Follow</button>
+    </div>
+
+    <p>Sending positive energy your way! 💫 #GoodEnergy</p>
+    <span class="sound">♫ feel good — amanda.vibes</span>
+  </div>
+
+  <div class="actions">
+    <button class="action like" type="button" aria-label="Like">
+      ♡
+      <small>2.4K</small>
+    </button>
+
+    <button class="action comments" type="button" aria-label="Comments">
+      ▢
+      <small>109</small>
+    </button>
+
+    <button class="action share" type="button" aria-label="Share">
+      ➤
+      <small>Share</small>
+    </button>
+
+    <span class="record">♫</span>
+  </div>
+</article>
+
+  </main>
+  <nav class="bottom-nav" aria-label="Main navigation">
+    <button class="nav-item selected" type="button" data-nav="home">
+      <span>⌂</span>
+      <small>Home</small>
+    </button>
+<button class="nav-item" type="button" data-nav="discover">
+  <span>⌕</span>
+  <small>Discover</small>
+</button>
+
+<button
+  class="upload-nav"
+  id="uploadBtn"
+  type="button"
+  aria-label="Upload video"
+>
+  ＋
+</button>
+
+<input
+  id="videoInput"
+  type="file"
+  accept="video/*"
+  hidden
+>
+
+<button class="nav-item" type="button" data-nav="inbox">
+  <span>♡</span>
+  <small>Inbox</small>
+</button>
+
+<button class="nav-item" type="button" data-nav="profile">
+  <span>◉</span>
+  <small>Profile</small>
+</button>
+
+  </nav>
   <section class="modal" id="commentsModal" aria-hidden="true">
-    <div class="modal-panel"><div class="modal-head"><b>Comments</b><button class="close">✕</button></div><div id="commentList" class="comment-list"><p class="muted">Be the first to comment.</p></div><form id="commentForm"><input id="commentInput" placeholder="Add a comment…" maxlength="240" required><button>Post</button></form></div>
+    <div class="modal-panel">
+      <div class="modal-head">
+        <b>Comments</b>
+        <button class="close" type="button" aria-label="Close">✕</button>
+      </div>
+  <div id="commentList" class="comment-list">
+    <p class="muted">Be the first to comment.</p>
+  </div>
+
+  <form id="commentForm">
+    <input
+      id="commentInput"
+      type="text"
+      placeholder="Add a comment..."
+      maxlength="240"
+      required
+    >
+
+    <button type="submit">Post</button>
+  </form>
+</div>
+
   </section>
   <section class="modal" id="searchModal" aria-hidden="true">
-    <div class="modal-panel search-panel"><div class="modal-head"><b>Discover FunTok</b><button class="close">✕</button></div><input id="searchInput" placeholder="Search creators or hashtags…"><p class="muted">Try #FunTok, #GoodVibes or a creator name.</p></div>
+    <div class="modal-panel search-panel">
+      <div class="modal-head">
+        <b>Discover FunTok</b>
+        <button class="close" type="button" aria-label="Close">✕</button>
+      </div>
+  <input
+    id="searchInput"
+    type="search"
+    placeholder="Search creators or hashtags..."
+    autocomplete="off"
+  >
+
+  <p class="muted">
+    Press Enter to search creators, captions, or hashtags.
+  </p>
+</div>
+
+  </section>
+  <section class="modal" id="captionModal" aria-hidden="true">
+    <div class="modal-panel caption-panel">
+      <div class="modal-head">
+        <b>Post your video</b>
+        <button class="close" type="button" aria-label="Close">✕</button>
+      </div>
+  <div id="captionPreview" class="caption-preview"></div>
+
+  <form id="captionForm">
+    <label for="captionInput">Caption</label>
+
+    <textarea
+      id="captionInput"
+      maxlength="240"
+      rows="4"
+      placeholder="Write a caption and add hashtags..."
+    ></textarea>
+
+    <div id="uploadProgress" class="upload-progress" hidden>
+      <div id="uploadProgressBar" class="upload-progress-bar"></div>
+    </div>
+
+    <p id="uploadStatus" class="upload-status" role="status"></p>
+
+    <div class="caption-actions">
+      <button
+        id="captionCancel"
+        class="secondary-btn"
+        type="button"
+      >
+        Cancel
+      </button>
+
+      <button class="primary-btn" type="submit">
+        Post video
+      </button>
+    </div>
+  </form>
+</div>
+
   </section>
   <section class="modal" id="accountModal" aria-hidden="true">
     <div class="modal-panel account-panel">
-      <div class="modal-head"><b id="accountTitle">Welcome to FunTok</b><button class="close">✕</button></div>
-      <p class="muted" id="accountMessage">Create an account or log in to your FunTok profile.</p>
-      <div id="signedInPanel" hidden>
-        <p id="signedInEmail" class="signed-in-email"></p>
-        <button id="logoutBtn" class="primary-btn" type="button">Log out</button>
+      <div class="modal-head">
+        <b id="accountTitle">Welcome to FunTok</b>
+        <button class="close" type="button" aria-label="Close">✕</button>
       </div>
-      <form id="authForm">
-        <label for="displayName" id="displayNameLabel">Display name</label>
-        <input id="displayName" type="text" autocomplete="name" placeholder="Your name" maxlength="40">
-        <label for="authEmail">Email address</label>
-        <input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" required>
-        <label for="authPassword">Password</label>
-        <input id="authPassword" type="password" autocomplete="current-password" placeholder="At least 6 characters" minlength="6" required>
-        <button id="authSubmit" class="primary-btn" type="submit">Create account</button>
-      </form>
-      <button id="authSwitch" class="text-btn" type="button">Already have an account? Log in</button>
-      <p id="authFeedback" class="auth-feedback" role="status"></p>
-    </div>
+  <p class="muted" id="accountMessage">
+    Create an account or log in to your FunTok profile.
+  </p>
+
+  <div id="signedInPanel" hidden></div>
+
+  <form id="authForm">
+    <label for="displayName" id="displayNameLabel">
+      Display name
+    </label>
+
+    <input
+      id="displayName"
+      type="text"
+      autocomplete="name"
+      placeholder="Your name"
+      maxlength="40"
+    >
+
+    <label for="authEmail">Email address</label>
+
+    <input
+      id="authEmail"
+      type="email"
+      autocomplete="email"
+      placeholder="you@example.com"
+      required
+    >
+
+    <label for="authPassword">Password</label>
+
+    <input
+      id="authPassword"
+      type="password"
+      autocomplete="current-password"
+      placeholder="At least 6 characters"
+      minlength="6"
+      required
+    >
+
+    <button id="authSubmit" class="primary-btn" type="submit">
+      Create account
+    </button>
+  </form>
+
+  <button id="authSwitch" class="text-btn" type="button">
+    Already have an account? Log in
+  </button>
+
+  <p id="authFeedback" class="auth-feedback" role="status"></p>
+</div>
+
   </section>
-  <div id="toast" role="status" class="toast"></div>
-  
+  <div id="toast" class="toast" role="status"></div>
   <script type="module" src="firebase-auth.js"></script>
 </body>
 </html>
