@@ -244,8 +244,6 @@ videoInput?.addEventListener("change", async (e) => {
   const displayName = currentUser.displayName || currentUser.email.split('@')[0] || "FunTok Creator";
   const caption = "My new FunTok video! 🎬 #FunTok";
 
-  alert("Uploading video to Cloudinary... Please wait a moment!");
-
   const formData = new FormData();
   formData.append("file", file);
   formData.append("upload_preset", UPLOAD_PRESET);
@@ -272,7 +270,7 @@ videoInput?.addEventListener("change", async (e) => {
     });
 
     renderVideoCard(videoUrl, displayName, caption);
-    alert("Video posted successfully to the cloud!");
+    console.log("Video posted successfully to the cloud!");
   } catch (err) {
     console.error("Upload error:", err);
     alert("Failed to upload video. Check console for details.");
