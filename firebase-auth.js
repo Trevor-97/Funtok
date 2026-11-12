@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, addCollection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA6DUPIHXVQoMNNPFIG3pViyQDwQHdNPQI",
@@ -33,11 +33,23 @@ const title = document.querySelector("#accountTitle");
 const message = document.querySelector("#accountMessage");
 const signedInPanel = document.querySelector("#signedInPanel");
 const signedInEmail = document.querySelector("#signedInEmail");
-const accountButton = document.querySelector("#accountBtn");
 let mode = "signup";
 
-function openAccount(){ if (modal) { modal.classList.add("open"); modal.setAttribute("aria-hidden","false"); } }
-function closeAccount(){ if (modal) { modal.classList.remove("open"); modal.setAttribute("aria-hidden","true"); } }
+function openAccount(){ 
+  if (modal) { 
+    modal.classList.add("open"); 
+    modal.setAttribute("aria-hidden","false"); 
+  } else {
+    console.warn("Account modal element not found!");
+  }
+}
+
+function closeAccount(){ 
+  if (modal) { 
+    modal.classList.remove("open"); 
+    modal.setAttribute("aria-hidden","true"); 
+  } 
+}
 
 function setMode(nextMode){
   mode = nextMode;
@@ -52,8 +64,6 @@ function setMode(nextMode){
   if(feedback) feedback.textContent = "";
 }
 
-accountButton?.addEventListener("click", openAccount);
-document.querySelector('[data-nav="profile"]')?.addEventListener("click", openAccount);
 document.addEventListener("click", (e) => {
   if (e.target.matches('#accountModal .close') || e.target === modal) closeAccount();
 });
@@ -99,6 +109,7 @@ form?.addEventListener("submit", async (event) => {
 });
 
 onAuthStateChanged(auth, async (user) => {
+  const accountButton = document.querySelector("#accountBtn");
   if (user) {
     if(accountButton) accountButton.textContent = "My account";
     if(form) form.hidden = true;
@@ -203,7 +214,18 @@ async function loadVideosFromFirestore() {
   }
 }
 
+// Safely bind buttons once DOM is fully loaded
 window.addEventListener("DOMContentLoaded", () => {
+  const accountButton = document.querySelector("#accountBtn");
+  if (accountButton) {
+    accountButton.addEventListener("click", openAccount);
+  }
+
+  const profileNav = document.querySelector('[data-nav="profile"]');
+  if (profileNav) {
+    profileNav.addEventListener("click", openAccount);
+  }
+
   loadVideosFromFirestore();
 });
 
@@ -222,7 +244,6 @@ videoInput?.addEventListener("change", async (e) => {
   const displayName = currentUser.displayName || currentUser.email.split('@')[0] || "FunTok Creator";
   const caption = "My new FunTok video! 🎬 #FunTok";
 
-  // Visual feedback that it's uploading
   alert("Uploading video to Cloudinary... Please wait a moment!");
 
   const formData = new FormData();
@@ -230,7 +251,6 @@ videoInput?.addEventListener("change", async (e) => {
   formData.append("upload_preset", UPLOAD_PRESET);
 
   try {
-    // 1. Upload to Cloudinary
     const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/video/upload`, {
       method: "POST",
       body: formData
@@ -243,7 +263,6 @@ videoInput?.addEventListener("change", async (e) => {
 
     const videoUrl = data.secure_url;
 
-    // 2. Save video metadata to Cloud Firestore
     await addDoc(collection(db, "videos"), {
       videoUrl: videoUrl,
       uid: currentUser.uid,
@@ -252,7 +271,6 @@ videoInput?.addEventListener("change", async (e) => {
       createdAt: new Date().toISOString()
     });
 
-    // 3. Render immediately on screen
     renderVideoCard(videoUrl, displayName, caption);
     alert("Video posted successfully to the cloud!");
   } catch (err) {
