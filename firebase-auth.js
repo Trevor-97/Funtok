@@ -499,8 +499,19 @@ async function uploadVideo(file, caption) {
   setUploadProgress(100);
   setUploadMessage("Video posted successfully.");
 
-  renderVideo(videoData, true);
-  showToast("Your video was posted.");
+const newCard = renderVideo(videoData, true);
+
+showToast("Your video was posted.");
+
+if (newCard) {
+  window.setTimeout(() => {
+    newCard.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }, 100);
+}
+
 
   window.setTimeout(() => {
     hideModal(captionModal);
