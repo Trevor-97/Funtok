@@ -346,9 +346,12 @@ function renderVideo(data, newest = false) {
 
   bindCard(card);
 
-  if (observer) {
-    observer.observe(card);
-  }
+if (observer) {
+  observer.observe(card);
+}
+
+return card;
+
 }
 
 async function loadVideos() {
