@@ -11,7 +11,7 @@ const firebaseConfig = {
   appId: "1:318736452384:web:9caa4ddadf42ecb0d12545"
 };
 
-const CLOUD_NAME = "ecgad8fi";
+const CLOUD_NAME = "ecgad8fl";
 const UPLOAD_PRESET = "funtok_media";
 
 const app = initializeApp(firebaseConfig);
