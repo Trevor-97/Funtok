@@ -1,6 +1,23 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA6DUPIHXVQoMNNPFIG3pViyQDwQHdNPQI",
@@ -11,14 +28,17 @@ const firebaseConfig = {
   appId: "1:318736452384:web:9caa4ddadf42ecb0d12545"
 };
 
-const CLOUD_NAME = "ecgad8fl";
+const CLOUD_NAME = "ecgad8f1";
 const UPLOAD_PRESET = "funtok_media";
+const CLOUDINARY_UPLOAD_URL =
+  `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`;
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const $ = (s) => document.querySelector(s);
+const $ = (selector) => document.querySelector(selector);
+
 const feed = $("#feed");
 const videoInput = $("#videoInput");
 const uploadBtn = $("#uploadBtn");
@@ -49,50 +69,103 @@ const uploadStatus = $("#uploadStatus");
 
 let authMode = "signup";
 let selectedFile = null;
+let previewUrl = "";
 let observer = null;
 
-function showToast(msg) {
+function showToast(message) {
   if (!toast) return;
-  toast.textContent = msg;
+
+  toast.textContent = message;
   toast.classList.add("show");
-  setTimeout(() => toast.classList.remove("show"), 2200);
+
+  window.setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2200);
 }
 
 function showModal(modal) {
-  modal?.classList.add("open");
-  modal?.setAttribute("aria-hidden", "false");
+  if (!modal) return;
+
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden", "false");
 }
 
 function hideModal(modal) {
-  modal?.classList.remove("open");
-  modal?.setAttribute("aria-hidden", "true");
+  if (!modal) return;
+
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden", "true");
 }
 
-function escapeHtml(str = "") {
-  return String(str).replace(/[&<>"']/g, (char) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
-  }[char]));
+function escapeHtml(value = "") {
+  return String(value).replace(/[&<>"']/g, (character) => {
+    const entities = {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    };
+
+    return entities[character];
+  });
 }
 
-function usernameFrom(name, email) {
-  const val = name || email?.split("@")[0] || "funtokuser";
-  return val.toLowerCase().replace(/[^a-z0-9._]/g, "").slice(0, 30) || "funtokuser";
+function usernameFrom(name, email = "") {
+  const value = name || email.split("@")[0] || "funtokuser";
+
+  return (
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9._]/g, "")
+      .slice(0, 30) || "funtokuser"
+  );
 }
 
 function setAuthMode(mode) {
   authMode = mode;
+
   const isSignup = mode === "signup";
-  if (accountTitle) accountTitle.textContent = isSignup ? "Create your FunTok account" : "Welcome back";
-  if (accountMessage) accountMessage.textContent = isSignup ? "Join FunTok with your email address." : "Log in to continue to your FunTok account.";
-  if (displayNameInput) displayNameInput.hidden = !isSignup;
-  if (displayNameLabel) displayNameLabel.hidden = !isSignup;
-  if (authSubmit) authSubmit.textContent = isSignup ? "Create account" : "Log in";
-  if (authSwitch) authSwitch.textContent = isSignup ? "Already have an account? Log in" : "New to FunTok? Create an account";
-  if (authFeedback) authFeedback.textContent = "";
+
+  if (accountTitle) {
+    accountTitle.textContent = isSignup
+      ? "Create your FunTok account"
+      : "Welcome back";
+  }
+
+  if (accountMessage) {
+    accountMessage.textContent = isSignup
+      ? "Join FunTok with your email address."
+      : "Log in to continue to your FunTok account.";
+  }
+
+  if (displayNameInput) {
+    displayNameInput.hidden = !isSignup;
+  }
+
+  if (displayNameLabel) {
+    displayNameLabel.hidden = !isSignup;
+  }
+
+  if (authSubmit) {
+    authSubmit.textContent = isSignup
+      ? "Create account"
+      : "Log in";
+  }
+
+  if (authSwitch) {
+    authSwitch.textContent = isSignup
+      ? "Already have an account? Log in"
+      : "New to FunTok? Create an account";
+  }
+
+  if (authFeedback) {
+    authFeedback.textContent = "";
+  }
 }
 
-function authErrorMessage(err) {
-  const msgs = {
+function authErrorMessage(error) {
+  const messages = {
     "auth/email-already-in-use": "That email already has an account.",
     "auth/invalid-email": "Please enter a valid email address.",
     "auth/weak-password": "Choose a stronger password.",
@@ -100,32 +173,54 @@ function authErrorMessage(err) {
     "auth/network-request-failed": "Network problem. Check your connection.",
     "auth/too-many-requests": "Too many attempts. Please wait."
   };
-  return msgs[err?.code] || "Something went wrong. Please try again.";
+
+  return messages[error?.code] || "Something went wrong. Please try again.";
+}
+
+function setUploadMessage(message) {
+  if (uploadStatus) {
+    uploadStatus.textContent = message;
+  }
+}
+
+function setUploadProgress(value) {
+  if (uploadProgress) {
+    uploadProgress.hidden = false;
+  }
+
+  if (uploadProgressBar) {
+    uploadProgressBar.style.width = `${value}%`;
+  }
 }
 
 function bindCard(card) {
   if (!card || card.dataset.bound === "true") return;
+
   card.dataset.bound = "true";
 
   const video = card.querySelector("video");
-  const like = card.querySelector(".like");
-  const follow = card.querySelector(".follow");
-  const comments = card.querySelector(".comments");
-  const share = card.querySelector(".share");
+  const likeButton = card.querySelector(".like");
+  const followButton = card.querySelector(".follow");
+  const commentsButton = card.querySelector(".comments");
+  const shareButton = card.querySelector(".share");
 
-  like?.addEventListener("click", () => {
-    const liked = like.classList.toggle("liked");
-    like.firstChild.textContent = liked ? "♥" : "♡";
+  likeButton?.addEventListener("click", () => {
+    const liked = likeButton.classList.toggle("liked");
+
+    likeButton.firstChild.textContent = liked ? "♥" : "♡";
   });
 
-  follow?.addEventListener("click", () => {
-    const following = follow.classList.toggle("following");
-    follow.textContent = following ? "Following" : "Follow";
+  followButton?.addEventListener("click", () => {
+    const following = followButton.classList.toggle("following");
+
+    followButton.textContent = following ? "Following" : "Follow";
   });
 
-  comments?.addEventListener("click", () => showModal($("#commentsModal")));
+  commentsButton?.addEventListener("click", () => {
+    showModal($("#commentsModal"));
+  });
 
-  share?.addEventListener("click", async () => {
+  shareButton?.addEventListener("click", async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
       showToast("FunTok link copied!");
@@ -134,58 +229,111 @@ function bindCard(card) {
     }
   });
 
-  video?.addEventListener("click", () => video.paused ? video.play().catch(() => {}) : video.pause());
+  video?.addEventListener("click", () => {
+    if (video.paused) {
+      video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
+  });
 }
 
 function startVideoObserver() {
   if (!feed || !("IntersectionObserver" in window)) return;
+
   observer?.disconnect();
 
-  observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      const video = entry.target.querySelector("video");
-      if (!video) return;
-      if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
-        video.play().catch(() => {});
-      } else {
-        video.pause();
-      }
-    });
-  }, { root: feed, threshold: 0.6 });
+  observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        const video = entry.target.querySelector("video");
 
-  document.querySelectorAll(".video-card").forEach((card) => observer.observe(card));
+        if (!video) return;
+
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
+          video.play().catch(() => {});
+        } else {
+          video.pause();
+        }
+      });
+    },
+    {
+      root: feed,
+      threshold: 0.6
+    }
+  );
+
+  document.querySelectorAll(".video-card").forEach((card) => {
+    observer.observe(card);
+  });
 }
 
 function renderVideo(data, newest = false) {
-  if (!feed || !data.videoUrl) return;
+  if (!feed || !data?.videoUrl) return;
 
-  const name = data.displayName || "FunTok Creator";
+  const displayName = data.displayName || "FunTok Creator";
   const email = data.email || "";
   const caption = data.caption || "";
-  const username = usernameFrom(name, email);
-  const letter = name.trim().charAt(0).toUpperCase() || "F";
+  const username = usernameFrom(displayName, email);
+  const avatarLetter =
+    displayName.trim().charAt(0).toUpperCase() || "F";
 
   const card = document.createElement("article");
+
   card.className = "video-card uploaded-card";
+  card.dataset.uid = data.uid || "";
+  card.dataset.creator = displayName.toLowerCase();
+  card.dataset.caption = caption.toLowerCase();
 
   card.innerHTML = `
     <div class="visual uploaded-visual">
-      <video src="${escapeHtml(data.videoUrl)}" playsinline loop muted preload="metadata"></video>
+      <video
+        src="${escapeHtml(data.videoUrl)}"
+        playsinline
+        loop
+        muted
+        preload="metadata"
+      ></video>
     </div>
+
     <div class="video-shade"></div>
+
     <div class="video-info">
       <div class="creator">
-        <span class="avatar">${escapeHtml(letter)}</span>
+        <span class="avatar">
+          ${escapeHtml(avatarLetter)}
+        </span>
+
         <b>@${escapeHtml(username)}</b>
-        <button class="follow" type="button">Follow</button>
+
+        <button class="follow" type="button">
+          Follow
+        </button>
       </div>
+
       <p>${escapeHtml(caption)}</p>
-      <span class="sound">♫ original sound — ${escapeHtml(name)}</span>
+
+      <span class="sound">
+        ♫ original sound — ${escapeHtml(displayName)}
+      </span>
     </div>
+
     <div class="actions">
-      <button class="action like" type="button" aria-label="Like">♡<small>0</small></button>
-      <button class="action comments" type="button" aria-label="Comments">▢<small>0</small></button>
-      <button class="action share" type="button" aria-label="Share">➤<small>Share</small></button>
+      <button class="action like" type="button" aria-label="Like">
+        ♡
+        <small>0</small>
+      </button>
+
+      <button class="action comments" type="button" aria-label="Comments">
+        ▢
+        <small>0</small>
+      </button>
+
+      <button class="action share" type="button" aria-label="Share">
+        ➤
+        <small>Share</small>
+      </button>
+
       <span class="record">♫</span>
     </div>
   `;
@@ -197,131 +345,244 @@ function renderVideo(data, newest = false) {
   }
 
   bindCard(card);
-  observer?.observe(card);
+
+  if (observer) {
+    observer.observe(card);
+  }
 }
 
 async function loadVideos() {
   if (!feed) return;
+
   try {
-    const snapshot = await getDocs(query(collection(db, "videos"), orderBy("createdAt", "desc")));
-    snapshot.forEach((docSnap) => renderVideo({ id: docSnap.id, ...docSnap.data() }));
+    const videosQuery = query(
+      collection(db, "videos"),
+      orderBy("createdAt", "desc")
+    );
+
+    const snapshot = await getDocs(videosQuery);
+
+    snapshot.forEach((videoDocument) => {
+      renderVideo({
+        id: videoDocument.id,
+        ...videoDocument.data()
+      });
+    });
+
     startVideoObserver();
-  } catch (err) {
-    console.error("Could not load videos:", err);
+  } catch (error) {
+    console.error("Could not load videos:", error);
     showToast("Could not load uploaded videos.");
   }
 }
 
 function resetCaptionModal() {
+  if (previewUrl) {
+    URL.revokeObjectURL(previewUrl);
+    previewUrl = "";
+  }
+
   selectedFile = null;
+
   captionForm?.reset();
-  if (captionPreview) captionPreview.innerHTML = "";
-  if (uploadProgress) uploadProgress.hidden = true;
-  if (uploadProgressBar) uploadProgressBar.style.width = "0%";
-  if (uploadStatus) uploadStatus.textContent = "";
+
+  if (captionPreview) {
+    captionPreview.innerHTML = "";
+  }
+
+  if (uploadProgress) {
+    uploadProgress.hidden = true;
+  }
+
+  if (uploadProgressBar) {
+    uploadProgressBar.style.width = "0%";
+  }
+
+  if (uploadStatus) {
+    uploadStatus.textContent = "";
+  }
 }
 
 function openCaptionModal(file) {
+  resetCaptionModal();
+
   selectedFile = file;
+  previewUrl = URL.createObjectURL(file);
+
   if (captionPreview) {
-    captionPreview.innerHTML = `<video src="${URL.createObjectURL(file)}" controls muted playsinline></video>`;
+    captionPreview.innerHTML = `
+      <video
+        src="${previewUrl}"
+        controls
+        muted
+        playsinline
+      ></video>
+    `;
   }
+
   showModal(captionModal);
-  captionInput?.focus();
+
+  window.setTimeout(() => {
+    captionInput?.focus();
+  }, 100);
+}
+
+function setCaptionFormLoading(isLoading) {
+  const submitButton = captionForm?.querySelector("[type='submit']");
+
+  if (submitButton) {
+    submitButton.disabled = isLoading;
+    submitButton.textContent = isLoading
+      ? "Uploading..."
+      : "Post video";
+  }
+
+  if (captionInput) {
+    captionInput.disabled = isLoading;
+  }
+
+  if (captionCancel) {
+    captionCancel.disabled = isLoading;
+  }
 }
 
 async function uploadVideo(file, caption) {
   const user = auth.currentUser;
-  if (!user) throw new Error("Please log in before uploading.");
 
-  const name = user.displayName || user.email?.split("@")[0] || "FunTok Creator";
+  if (!user) {
+    throw new Error("Please log in before uploading.");
+  }
+
+  const displayName =
+    user.displayName ||
+    user.email?.split("@")[0] ||
+    "FunTok Creator";
+
   const formData = new FormData();
+
   formData.append("file", file);
   formData.append("upload_preset", UPLOAD_PRESET);
 
-  if (uploadProgress) uploadProgress.hidden = false;
-  if (uploadStatus) uploadStatus.textContent = "Uploading video...";
-  if (uploadProgressBar) uploadProgressBar.style.width = "35%";
+  setUploadMessage("Uploading video...");
+  setUploadProgress(35);
 
-  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`
-
-                          , {
+  const response = await fetch(CLOUDINARY_UPLOAD_URL, {
     method: "POST",
     body: formData
   });
 
-  const cloudData = await res.json();
-  if (!res.ok || !cloudData.secure_url) {
-    throw new Error(cloudData.error?.message || "Cloudinary upload failed.");
+  const cloudinaryData = await response.json();
+
+  if (!response.ok || !cloudinaryData.secure_url) {
+    console.error("Cloudinary response:", cloudinaryData);
+
+    throw new Error(
+      cloudinaryData.error?.message ||
+      `Cloudinary upload failed with status ${response.status}.`
+    );
   }
 
-  if (uploadStatus) uploadStatus.textContent = "Saving video post...";
-  if (uploadProgressBar) uploadProgressBar.style.width = "75%";
+  setUploadMessage("Saving video post...");
+  setUploadProgress(75);
 
   const videoData = {
-    videoUrl: cloudData.secure_url,
+    videoUrl: cloudinaryData.secure_url,
     uid: user.uid,
     email: user.email || "",
-    displayName: name,
+    displayName,
     caption,
     createdAt: new Date().toISOString()
   };
 
   await addDoc(collection(db, "videos"), videoData);
 
-  if (uploadProgressBar) uploadProgressBar.style.width = "100%";
-  if (uploadStatus) uploadStatus.textContent = "Video posted.";
+  setUploadProgress(100);
+  setUploadMessage("Video posted successfully.");
 
   renderVideo(videoData, true);
   showToast("Your video was posted.");
 
-  setTimeout(() => {
+  window.setTimeout(() => {
     hideModal(captionModal);
     resetCaptionModal();
-  }, 500);
+  }, 600);
 }
 
-authForm?.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  if (authFeedback) authFeedback.textContent = "Working...";
-  if (authSubmit) authSubmit.disabled = true;
+authForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  if (authFeedback) {
+    authFeedback.textContent = "Working...";
+  }
+
+  if (authSubmit) {
+    authSubmit.disabled = true;
+  }
 
   try {
     const email = authEmail.value.trim();
     const password = authPassword.value;
 
     if (authMode === "signup") {
-      const res = await createUserWithEmailAndPassword(auth, email, password);
+      const result = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
       const name = displayNameInput.value.trim();
 
-      if (name) await updateProfile(res.user, { displayName: name });
+      if (name) {
+        await updateProfile(result.user, {
+          displayName: name
+        });
+      }
 
-      await setDoc(doc(db, "users", res.user.uid), {
-        uid: res.user.uid,
-        email: res.user.email,
+      await setDoc(doc(db, "users", result.user.uid), {
+        uid: result.user.uid,
+        email: result.user.email,
         username: name || email.split("@")[0],
         displayName: name || "FunTok User",
         bio: "Hello! I am new on FunTok.",
         createdAt: new Date().toISOString()
       });
 
-      if (authFeedback) authFeedback.textContent = "Account created.";
+      if (authFeedback) {
+        authFeedback.textContent = "Account created.";
+      }
     } else {
       await signInWithEmailAndPassword(auth, email, password);
-      if (authFeedback) authFeedback.textContent = "Logged in.";
+
+      if (authFeedback) {
+        authFeedback.textContent = "Logged in.";
+      }
     }
+
     authForm.reset();
-  } catch (err) {
-    console.error(err);
-    if (authFeedback) authFeedback.textContent = authErrorMessage(err);
+  } catch (error) {
+    console.error("Authentication error:", error);
+
+    if (authFeedback) {
+      authFeedback.textContent = authErrorMessage(error);
+    }
   } finally {
-    if (authSubmit) authSubmit.disabled = false;
+    if (authSubmit) {
+      authSubmit.disabled = false;
+    }
   }
 });
 
-authSwitch?.addEventListener("click", () => setAuthMode(authMode === "signup" ? "login" : "signup"));
-accountBtn?.addEventListener("click", () => showModal(accountModal));
-$('[data-nav="profile"]')?.addEventListener("click", () => showModal(accountModal));
+authSwitch?.addEventListener("click", () => {
+  setAuthMode(authMode === "signup" ? "login" : "signup");
+});
+
+accountBtn?.addEventListener("click", () => {
+  showModal(accountModal);
+});
+
+$('[data-nav="profile"]')?.addEventListener("click", () => {
+  showModal(accountModal);
+});
 
 uploadBtn?.addEventListener("click", () => {
   if (!auth.currentUser) {
@@ -329,169 +590,307 @@ uploadBtn?.addEventListener("click", () => {
     showToast("Please log in before uploading.");
     return;
   }
+
   videoInput?.click();
 });
 
 videoInput?.addEventListener("change", () => {
   const file = videoInput.files?.[0];
+
   if (!file) return;
+
   if (!file.type.startsWith("video/")) {
     showToast("Please select a video file.");
     videoInput.value = "";
     return;
   }
+
   openCaptionModal(file);
 });
 
-captionForm?.addEventListener("submit", async (e) => {
-  e.preventDefault();
+captionForm?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+
   if (!selectedFile) {
     showToast("Please select a video first.");
     return;
   }
 
-  const caption = captionInput.value.trim() || "My new FunTok video! 🎬 #FunTok";
-  const subBtn = captionForm.querySelector("[type='submit']");
+  const caption =
+    captionInput?.value.trim() ||
+    "My new FunTok video! 🎬 #FunTok";
 
-  if (subBtn) {
-    subBtn.disabled = true;
-    subBtn.textContent = "Uploading...";
-  }
+  setCaptionFormLoading(true);
 
   try {
     await uploadVideo(selectedFile, caption);
-  } catch (err) {
-    console.error("Upload error:", err);
-    if (uploadStatus) uploadStatus.textContent = err.message;
-    showToast(`Upload failed: ${err.message}`);
+  } catch (error) {
+    console.error("Upload error:", error);
+
+    setUploadMessage(error.message);
+    showToast(`Upload failed: ${error.message}`);
   } finally {
-    if (subBtn) {
-      subBtn.disabled = false;
-      subBtn.textContent = "Post video";
+    setCaptionFormLoading(false);
+
+    if (videoInput) {
+      videoInput.value = "";
     }
-    if (videoInput) videoInput.value = "";
   }
 });
 
 captionCancel?.addEventListener("click", () => {
   hideModal(captionModal);
   resetCaptionModal();
-  if (videoInput) videoInput.value = "";
+
+  if (videoInput) {
+    videoInput.value = "";
+  }
 });
 
-document.querySelectorAll(".modal .close, .modal").forEach((el) => {
-  el.addEventListener("click", (e) => {
-    if (el.classList.contains("modal") && e.target !== el) return;
-    const modal = el.closest(".modal") || el;
+document.querySelectorAll(".modal .close").forEach((button) => {
+  button.addEventListener("click", () => {
+    const modal = button.closest(".modal");
+
     if (modal === captionModal) {
       resetCaptionModal();
-      if (videoInput) videoInput.value = "";
+
+      if (videoInput) {
+        videoInput.value = "";
+      }
     }
+
     hideModal(modal);
   });
 });
 
-$("#commentForm")?.addEventListener("submit", (e) => {
-  e.preventDefault();
+document.querySelectorAll(".modal").forEach((modal) => {
+  modal.addEventListener("click", (event) => {
+    if (event.target !== modal) return;
+
+    if (modal === captionModal) {
+      resetCaptionModal();
+
+      if (videoInput) {
+        videoInput.value = "";
+      }
+    }
+
+    hideModal(modal);
+  });
+});
+
+$("#commentForm")?.addEventListener("submit", (event) => {
+  event.preventDefault();
+
   const input = $("#commentInput");
   const list = $("#commentList");
-  const val = input?.value.trim();
-  if (!val || !list) return;
+  const value = input?.value.trim();
+
+  if (!value || !list) return;
 
   list.querySelector(".muted")?.remove();
-  const p = document.createElement("p");
-  p.textContent = `You: ${val}`;
-  list.appendChild(p);
+
+  const comment = document.createElement("p");
+  comment.textContent = `You: ${value}`;
+  list.appendChild(comment);
+
   input.value = "";
 });
 
-$("#searchBtn")?.addEventListener("click", () => showModal($("#searchModal")));
-$("#searchInput")?.addEventListener("keydown", (e) => {
-  if (e.key !== "Enter") return;
-  const term = e.target.value.trim().toLowerCase();
-  let count = 0;
+$("#searchBtn")?.addEventListener("click", () => {
+  showModal($("#searchModal"));
+});
+
+$("#searchInput")?.addEventListener("keydown", (event) => {
+  if (event.key !== "Enter") return;
+
+  const term = event.target.value.trim().toLowerCase();
+  let matchCount = 0;
 
   document.querySelectorAll(".video-card").forEach((card) => {
-    const match = !term || card.innerText.toLowerCase().includes(term);
-    card.style.display = match ? "" : "none";
-    if (match) count++;
+    const matches =
+      !term ||
+      card.innerText.toLowerCase().includes(term);
+
+    card.style.display = matches ? "" : "none";
+
+    if (matches) {
+      matchCount += 1;
+    }
   });
 
   hideModal($("#searchModal"));
-  showToast(`${count} matching video(s)`);
+  showToast(`${matchCount} matching video(s)`);
 });
 
 document.querySelectorAll(".tab").forEach((tab) => {
   tab.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+    document
+      .querySelectorAll(".tab")
+      .forEach((item) => item.classList.remove("active"));
+
     tab.classList.add("active");
+
     if (tab.dataset.feed === "following") {
       showToast("Following feed is coming soon.");
     } else {
-      document.querySelectorAll(".video-card").forEach((c) => c.style.display = "");
+      document.querySelectorAll(".video-card").forEach((card) => {
+        card.style.display = "";
+      });
     }
   });
 });
 
-document.querySelectorAll(".nav-item").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".nav-item").forEach((i) => i.classList.remove("selected"));
-    btn.classList.add("selected");
-    if (btn.dataset.nav !== "home") showToast(`${btn.dataset.nav} is coming soon.`);
+document.querySelectorAll(".nav-item").forEach((button) => {
+  button.addEventListener("click", () => {
+    document
+      .querySelectorAll(".nav-item")
+      .forEach((item) => item.classList.remove("selected"));
+
+    button.classList.add("selected");
+
+    if (button.dataset.nav !== "home") {
+      showToast(`${button.dataset.nav} is coming soon.`);
+    }
   });
 });
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    if (accountBtn) accountBtn.textContent = "Log in";
-    if (authForm) authForm.hidden = false;
-    if (authSwitch) authSwitch.hidden = false;
-    if (signedInPanel) signedInPanel.hidden = true;
+    if (accountBtn) {
+      accountBtn.textContent = "Log in";
+    }
+
+    if (authForm) {
+      authForm.hidden = false;
+    }
+
+    if (authSwitch) {
+      authSwitch.hidden = false;
+    }
+
+    if (signedInPanel) {
+      signedInPanel.hidden = true;
+    }
+
     setAuthMode("signup");
     return;
   }
 
-  if (accountBtn) accountBtn.textContent = "My account";
-  if (authForm) authForm.hidden = true;
-  if (authSwitch) authSwitch.hidden = true;
-  if (signedInPanel) signedInPanel.hidden = false;
-  if (accountTitle) accountTitle.textContent = "Your FunTok Profile";
-  if (accountMessage) accountMessage.textContent = "Manage your bio and account details.";
+  if (accountBtn) {
+    accountBtn.textContent = "My account";
+  }
 
-  let profile = { displayName: user.displayName || "", bio: "Hello! I am new on FunTok." };
+  if (authForm) {
+    authForm.hidden = true;
+  }
+
+  if (authSwitch) {
+    authSwitch.hidden = true;
+  }
+
+  if (signedInPanel) {
+    signedInPanel.hidden = false;
+  }
+
+  if (accountTitle) {
+    accountTitle.textContent = "Your FunTok Profile";
+  }
+
+  if (accountMessage) {
+    accountMessage.textContent = "Manage your bio and account details.";
+  }
+
+  let profile = {
+    displayName: user.displayName || "",
+    bio: "Hello! I am new on FunTok."
+  };
 
   try {
-    const snap = await getDoc(doc(db, "users", user.uid));
-    if (snap.exists()) profile = { ...profile, ...snap.data() };
-  } catch (err) {
-    console.warn("Could not load profile:", err);
+    const profileSnapshot = await getDoc(
+      doc(db, "users", user.uid)
+    );
+
+    if (profileSnapshot.exists()) {
+      profile = {
+        ...profile,
+        ...profileSnapshot.data()
+      };
+    }
+  } catch (error) {
+    console.warn("Could not load profile:", error);
   }
 
   signedInPanel.innerHTML = `
-    <p class="signed-in-email"><b>Email:</b> ${escapeHtml(user.email || "")}</p>
+    <p class="signed-in-email">
+      <b>Email:</b> ${escapeHtml(user.email || "")}
+    </p>
+
     <label for="editDisplayName">Display name</label>
-    <input id="editDisplayName" type="text" maxlength="40" value="${escapeHtml(profile.displayName)}">
+
+    <input
+      id="editDisplayName"
+      type="text"
+      maxlength="40"
+      value="${escapeHtml(profile.displayName)}"
+    >
+
     <label for="editBio">Bio</label>
+
     <textarea id="editBio" rows="3">${escapeHtml(profile.bio)}</textarea>
-    <button id="saveProfileBtn" class="primary-btn" type="button">Save profile</button>
-    <button id="logoutBtn" class="primary-btn logout-btn" type="button">Log out</button>
+
+    <button
+      id="saveProfileBtn"
+      class="primary-btn"
+      type="button"
+    >
+      Save profile
+    </button>
+
+    <button
+      id="logoutBtn"
+      class="primary-btn logout-btn"
+      type="button"
+    >
+      Log out
+    </button>
+
     <p id="profileFeedback" class="auth-feedback"></p>
   `;
 
   $("#saveProfileBtn")?.addEventListener("click", async () => {
-    const newName = $("#editDisplayName")?.value.trim() || "FunTok User";
-    const newBio = $("#editBio")?.value.trim() || "";
+    const newName =
+      $("#editDisplayName")?.value.trim() || "FunTok User";
+
+    const newBio =
+      $("#editBio")?.value.trim() || "";
+
     const feedback = $("#profileFeedback");
+
     if (!feedback) return;
 
     feedback.textContent = "Saving...";
+
     try {
-      await setDoc(doc(db, "users", user.uid), { displayName: newName, bio: newBio }, { merge: true });
-      await updateProfile(user, { displayName: newName });
+      await setDoc(
+        doc(db, "users", user.uid),
+        {
+          displayName: newName,
+          bio: newBio
+        },
+        {
+          merge: true
+        }
+      );
+
+      await updateProfile(user, {
+        displayName: newName
+      });
+
       feedback.textContent = "Profile saved.";
       showToast("Profile updated.");
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error("Profile update error:", error);
       feedback.textContent = "Could not save your profile.";
     }
   });
@@ -509,6 +908,14 @@ window.addEventListener("DOMContentLoaded", () => {
   loadVideos();
 });
 
-if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-  navigator.serviceWorker.register("./sw.js").catch((err) => console.warn("Service worker registration failed:", err));
+if (
+  "serviceWorker" in navigator &&
+  location.protocol.startsWith("http")
+) {
+  navigator.serviceWorker.register("./sw.js").catch((error) => {
+    console.warn(
+      "Service worker registration failed:",
+      error
+    );
+  });
 }
